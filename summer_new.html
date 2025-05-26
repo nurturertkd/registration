@@ -1,0 +1,986 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2025年暑期班報名表單 📣</title>
+  <!-- Google Fonts: Noto Sans TC -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #E1F5FE 0%, #FFFFFF 100%);
+      color: #333;
+    }
+    .form-container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+      margin-bottom: 32px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 500;
+      font-size: 16px;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #B0BEC5;
+      border-radius: 10px;
+      box-sizing: border-box;
+      font-size: 16px;
+      height: 44px;
+      line-height: 1.5;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+    #name, #phone {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #0288D1;
+      box-shadow: 0 0 6px rgba(2, 136, 209, 0.3);
+    }
+    .date-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .date-group select {
+      width: 120px;
+      height: 44px;
+    }
+    .date-group span {
+      font-size: 16px;
+      color: #333;
+    }
+    .gender-group {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .gender-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    input[type="radio"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #B0BEC5;
+      border-radius: 50%;
+      background: white;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    input[type="radio"]:hover {
+      border-color: #0288D1;
+    }
+    input[type="radio"]:checked {
+      border-color: #0288D1;
+    }
+    input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #0288D1;
+    }
+    .course-card {
+      border: 1px solid #B0BEC5;
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      background-color: #ECEFF1;
+    }
+    .course-card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    .course-card.selected {
+      border: 2px solid #0288D1;
+      box-shadow: 0 0 8px rgba(2, 136, 209, 0.3);
+      background-color: #E1F5FE;
+    }
+    .error {
+      color: #D32F2F;
+      font-size: 14px;
+      margin-top: 6px;
+      display: none;
+    }
+    .warning {
+      color: #D32F2F;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 32px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    .modal-content p {
+      font-size: 16px;
+      margin: 12px 0;
+    }
+    .modal-content ul {
+      padding-left: 20px;
+      margin: 12px 0;
+    }
+    .modal-content ul li {
+      font-size: 16px;
+      line-height: 1.8;
+      list-style: none;
+      position: relative;
+    }
+    .modal-content ul li::before {
+      content: '•';
+      position: absolute;
+      left: -20px;
+      color: #0288D1;
+    }
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s;
+      min-width: 100px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+    button[type="submit"], button.confirm, button.return-button {
+      background-color: #0288D1;
+      color: white;
+    }
+    button[type="submit"]:hover, button.confirm:hover, button.return-button:hover {
+      background-color: #0277BD;
+      transform: scale(1.05);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    button.cancel {
+      background-color: #B0BEC5;
+      color: #333;
+    }
+    button.cancel:hover {
+      background-color: #90A4AE;
+      transform: scale(1.05);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    #thankYouPage {
+      display: none;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    #thankYouPage h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: #333;
+    }
+    #thankYouPage p {
+      font-size: 16px;
+      margin: 16px 0;
+      color: #155724;
+    }
+    .selected-dates-list {
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .selected-dates-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #ECEFF1;
+      font-size: 16px;
+    }
+    .selected-dates-list button {
+      background-color: #D32F2F;
+      color: white;
+      padding: 4px 8px;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    .selected-dates-list button:hover {
+      background-color: #B71C1C;
+    }
+    .calendar-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .calendar-table th, .calendar-table td {
+      border: 1px solid #B0BEC5;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .calendar-table th {
+      background-color: #E1F5FE;
+      font-weight: 500;
+    }
+    .calendar-table td {
+      vertical-align: top;
+      height: 100px;
+      background-color: white;
+    }
+    .calendar-table td.disabled {
+      background-color: #F5F5F5;
+      color: #B0BEC5;
+    }
+    .calendar-table .date-header {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .calendar-table .time-slot {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      margin: 2px 0;
+    }
+    .calendar-table input[type="checkbox"] {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #B0BEC5;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .calendar-table input[type="checkbox"]:hover {
+      border-color: #0288D1;
+    }
+    .calendar-table input[type="checkbox"]:checked {
+      border-color: #0288D1;
+      background-color: #0288D1;
+    }
+    .calendar-table input[type="checkbox"]:checked::after {
+      content: '✔';
+      color: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+    }
+    @media (max-width: 600px) {
+      body {
+        margin: 20px auto;
+        padding: 16px;
+      }
+      .form-container, #thankYouPage {
+        padding: 24px;
+      }
+      .form-group {
+        margin-bottom: 24px;
+      }
+      h1 {
+        font-size: 28px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+      label {
+        font-size: 14px;
+      }
+      input, select {
+        padding: 10px;
+        font-size: 14px;
+        height: 40px;
+        border-radius: 8px;
+      }
+      #name, #phone {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      .date-group {
+        gap: 8px;
+      }
+      .date-group select {
+        width: 100px;
+        height: 40px;
+      }
+      .date-group span {
+        font-size: 14px;
+      }
+      .gender-group {
+        gap: 16px;
+      }
+      .gender-group label {
+        font-size: 14px;
+        gap: 6px;
+      }
+      input[type="radio"] {
+        width: 18px;
+        height: 18px;
+      }
+      input[type="radio"]:checked::after {
+        width: 10px;
+        height: 10px;
+      }
+      .course-card {
+        padding: 12px;
+      }
+      .modal-content {
+        width: 95%;
+        padding: 24px;
+      }
+      .modal-content p, .modal-content ul li {
+        font-size: 14px;
+      }
+      .modal-content ul {
+        padding-left: 16px;
+      }
+      .modal-content ul li::before {
+        left: -16px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-width: 80px;
+        border-radius: 8px;
+      }
+      .selected-dates-list {
+        max-height: 120px;
+      }
+      .selected-dates-list li {
+        font-size: 14px;
+        padding: 6px;
+      }
+      .selected-dates-list button {
+        padding: 2px 6px;
+        font-size: 12px;
+      }
+      .calendar-table th, .calendar-table td {
+        padding: 6px;
+        font-size: 12px;
+      }
+      .calendar-table td {
+        height: 80px;
+      }
+      .calendar-table .time-slot {
+        font-size: 10px;
+      }
+      .calendar-table input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+      }
+      .calendar-table input[type="checkbox"]:checked::after {
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container" id="formContainer">
+    <h1 class="text-4xl font-bold text-center mb-6 text-gray-800">2025年暑期班報名表單 📣</h1>
+    <p class="text-gray-600 mb-6 text-lg">
+      感謝您為孩子報名2025年暑期班！請填寫以下資訊，成功報名後您將收到WhatsApp確認訊息及付款詳情。所有欄位均為必填。
+    </p>
+    <p class="text-gray-600 mb-8 text-lg">
+      <strong>課程簡介</strong>：本課程為3至5歲及6歲以上學員設計，提供多元化的學習體驗（詳情請參考 <a href="#" class="text-blue-600 hover:underline">課程網站</a>）。<br>
+      <strong>早鳥優惠</strong>：報名費用享9折優惠，價格已於下方列出。
+    </p>
+
+    <form id="registrationForm" action="https://docs.google.com/forms/d/e/[FORM_ID]/formResponse" method="POST" class="space-y-8">
+      <!-- 學員資訊 -->
+      <div class="form-group">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">學員資訊</h2>
+        <div class="form-group">
+          <label for="name">學員中文姓名 *</label>
+          <input type="text" id="name" name="entry.1702329531" required>
+          <span id="nameError" class="error">請輸入學員姓名</span>
+        </div>
+        <div class="form-group">
+          <label for="phone">聯絡電話（需接收WhatsApp訊息） *</label>
+          <input type="tel" id="phone" name="entry.1541580542" pattern="\+?\d{8,}" required>
+          <span id="phoneError" class="error">請輸入有效的電話號碼</span>
+        </div>
+        <div class="form-group">
+          <label for="birthYear">出生日期 *</label>
+          <div class="date-group">
+            <select id="birthYear" name="entry.1919065731_year" required>
+              <option value="">年</option>
+            </select>
+            <span>/</span>
+            <select id="birthMonth" name="entry.1919065731_month" required>
+              <option value="">月</option>
+            </select>
+            <span>/</span>
+            <select id="birthDay" name="entry.1919065731_day" required>
+              <option value="">日</option>
+            </select>
+          </div>
+          <span id="birthdateError" class="error">請選擇有效的出生日期（不得晚於今日）</span>
+        </div>
+        <div class="form-group">
+          <label>性別 *</label>
+          <div class="gender-group">
+            <label><input type="radio" name="entry.123456792" value="男" required> 男</label>
+            <label><input type="radio" name="entry.123456792" value="女"> 女</label>
+          </div>
+          <span id="genderError" class="error">請選擇性別</span>
+        </div>
+      </div>
+
+      <!-- 課程選擇 -->
+      <div class="form-group">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">課程選擇</h2>
+        <div class="form-group">
+          <label>報名課堂（早鳥9折優惠） *</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div class="course-card" data-value="全期4堂 $792" onclick="selectCourse(this)">
+              <h3 class="text-lg font-semibold">全期4堂</h3>
+              <p class="text-gray-600">原價 $220/堂，早鳥9折：$792</p>
+            </div>
+            <div class="course-card" data-value="全期6堂 $1,188" onclick="selectCourse(this)">
+              <h3 class="text-lg font-semibold">全期6堂</h3>
+              <p class="text-gray-600">原價 $220/堂，早鳥9折：$1,188</p>
+            </div>
+            <div class="course-card" data-value="全期8堂 $1,440" onclick="selectCourse(this)">
+              <h3 class="text-lg font-semibold">全期8堂</h3>
+              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$1,440</p>
+            </div>
+            <div class="course-card" data-value="全期10堂 $1,800" onclick="selectCourse(this)">
+              <h3 class="text-lg font-semibold">全期10堂</h3>
+              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$1,800</p>
+            </div>
+            <div class="course-card" data-value="全期12堂 $2,160" onclick="selectCourse(this)">
+              <h3 class="text-lg font-semibold">全期12堂</h3>
+              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$2,160</p>
+            </div>
+          </div>
+          <input type="hidden" id="courseOption" name="entry.123456793">
+          <span id="courseError" class="error">請選擇課程方案</span>
+        </div>
+        <div class="form-group">
+          <label for="classType">所選班別 *</label>
+          <select id="classType" name="entry.123456794" required class="w-full" onchange="updateCalendarTable()">
+            <option value="" disabled selected>請選擇</option>
+            <option value="3歲至5歲">3歲至5歲</option>
+            <option value="6歲或以上">6歲或以上</option>
+          </select>
+          <span id="classTypeError" class="error">請選擇班別</span>
+        </div>
+      </div>
+
+      <!-- 課程時間選擇 -->
+      <div id="scheduleSection" class="form-group hidden">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">課程時間與日期</h2>
+        <p class="text-sm text-gray-600 mb-4">請根據所選課程堂數，在下方表格中勾選對應的日期與時段。總數需符合課程堂數。</p>
+        <div class="form-group">
+          <label>選擇日期與時段 *</label>
+          <div id="calendarTable"></div>
+          <p class="text-sm text-gray-600 mt-2">已選：<span id="selectedDatesCount">0</span> / <span id="requiredDates">0</span></p>
+          <span id="datesWarning" class="warning"></span>
+          <ul id="selectedDatesList" class="selected-dates-list"></ul>
+          <span id="datesError" class="error">請選擇正確數量的課程日期</span>
+        </div>
+        <input type="hidden" name="entry.123456795" id="selectedDates">
+      </div>
+
+      <!-- 按鈕 -->
+      <div class="flex justify-between gap-4">
+        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">下一步：確認資料</button>
+        <button type="button" onclick="resetForm()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-md hover:bg-gray-400">清除表單</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 確認頁面 -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-xl font-semibold mb-4">請確認您的報名資料</h2>
+      <p><strong>學員中文姓名：</strong> <span id="confirmName"></span></p>
+      <p><strong>聯絡電話：</strong> <span id="confirmPhone"></span></p>
+      <p><strong>出生日期：</strong> <span id="confirmBirthdate"></span></p>
+      <p><strong>性別：</strong> <span id="confirmGender"></span></p>
+      <p><strong>報名課堂：</strong> <span id="confirmCourse"></span></p>
+      <p><strong>所選班別：</strong> <span id="confirmClassType"></span></p>
+      <p><strong>課程日期與時段：</strong></p>
+      <ul id="confirmDates"></ul>
+      <div class="flex justify-between mt-6 gap-4">
+        <button class="cancel" onclick="cancelSubmission()">返回</button>
+        <button class="confirm" onclick="confirmSubmission()">提交</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 感謝頁面 -->
+  <div id="thankYouPage" class="hidden">
+    <h2 class="text-2xl font-bold text-center mb-4">感謝您的報名！</h2>
+    <p class="text-gray-600 mb-6">
+      我們將於24小時內通過WhatsApp聯繫您，確認班別資料及付款詳情。如需為其他學員報名，請點擊下方按鈕。
+    </p>
+    <button class="return-button" onclick="restartForm()">重新報名</button>
+  </div>
+
+  <script>
+    // 課程日期與時段數據
+    const schedules = {
+      '3歲至5歲': {
+        '星期一 9:30am - 10:30am': ['2025-07-07', '2025-07-14', '2025-07-21', '2025-07-28', '2025-08-04', '2025-08-11', '2025-08-18', '2025-08-25'],
+        '星期一 3:00pm - 4:00pm': ['2025-07-07', '2025-07-14', '2025-07-21', '2025-07-28', '2025-08-04', '2025-08-11', '2025-08-18', '2025-08-25'],
+        '星期二 4:15pm - 5:15pm': ['2025-07-08', '2025-07-15', '2025-07-22', '2025-07-29', '2025-08-05', '2025-08-12', '2025-08-19', '2025-08-26'],
+        '星期四 9:30am - 10:30am': ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'],
+        '星期四 3:00pm - 4:00pm': ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'],
+        '星期六 11:30am - 12:30pm': ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30'],
+        '星期六 2:30pm - 3:30pm': ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30']
+      },
+      '6歲或以上': {
+        '星期一 5:30pm - 6:30pm': ['2025-07-07', '2025-07-14', '2025-07-21', '2025-07-28', '2025-08-04', '2025-08-11', '2025-08-18', '2025-08-25'],
+        '星期二 3:00pm - 4:00pm': ['2025-07-08', '2025-07-15', '2025-07-22', '2025-07-29', '2025-08-05', '2025-08-12', '2025-08-19', '2025-08-26'],
+        '星期四 5:30pm - 6:30pm': ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'],
+        '星期六 10:00am - 11:00am': ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30'],
+        '星期六 3:45pm - 4:45pm': ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30']
+      }
+    };
+
+    // Populate birthdate dropdowns
+    const yearSelect = document.getElementById('birthYear');
+    const monthSelect = document.getElementById('birthMonth');
+    const daySelect = document.getElementById('birthDay');
+    const currentYear = new Date().getFullYear();
+
+    for (let year = currentYear; year >= 1900; year--) {
+      let option = document.createElement('option');
+      option.value = year;
+      option.text = year;
+      yearSelect.appendChild(option);
+    }
+
+    for (let month = 1; month <= 12; month++) {
+      let option = document.createElement('option');
+      option.value = month;
+      option.text = month.toString().padStart(2, '0');
+      monthSelect.appendChild(option);
+    }
+
+    function isLeapYear(year) {
+      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    function updateDays() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      daySelect.innerHTML = '<option value="">日</option>';
+
+      if (year && month) {
+        let daysInMonth;
+        if (month === 2) {
+          daysInMonth = isLeapYear(year) ? 29 : 28;
+        } else {
+          daysInMonth = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+          let option = document.createElement('option');
+          option.value = day;
+          option.text = day.toString().padStart(2, '0');
+          daySelect.appendChild(option);
+        }
+      }
+    }
+
+    updateDays();
+    yearSelect.addEventListener('change', updateDays);
+    monthSelect.addEventListener('change', updateDays);
+
+    // Course selection
+    function selectCourse(card) {
+      document.querySelectorAll('.course-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('courseOption').value = card.dataset.value;
+      updateCalendarTable();
+    }
+
+    // Calendar table and time slot selection
+    let selectedDateTimeSlots = [];
+
+    function generateCalendarTable(year, month, availableDates, dateTimeSlotMap) {
+      const table = document.createElement('table');
+      table.className = 'calendar-table';
+      const daysInMonth = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+      const firstDay = new Date(year, month - 1, 1).getDay();
+      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+      // Header
+      let headerRow = '<tr>';
+      weekdays.forEach(day => {
+        headerRow += `<th>${day}</th>`;
+      });
+      headerRow += '</tr>';
+      table.innerHTML = headerRow;
+
+      // Body
+      let row = document.createElement('tr');
+      for (let i = 0; i < firstDay; i++) {
+        row.innerHTML += '<td class="disabled"></td>';
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        const isAvailable = availableDates.includes(dateStr);
+        const cell = document.createElement('td');
+        if (isAvailable) {
+          const timeSlots = dateTimeSlotMap[dateStr] || [];
+          let timeSlotHtml = '';
+          timeSlots.forEach(slot => {
+            const slotId = `${dateStr} ${slot}`;
+            const isChecked = selectedDateTimeSlots.includes(slotId);
+            timeSlotHtml += `
+              <div class="time-slot">
+                <input type="checkbox" id="${slotId}" value="${slotId}" ${isChecked ? 'checked' : ''} onchange="toggleDateTimeSlot(this)">
+                <label for="${slotId}">${slot}</label>
+              </div>`;
+          });
+          cell.innerHTML = `<div class="date-header">${day}</div>${timeSlotHtml}`;
+        } else {
+          cell.className = 'disabled';
+          cell.innerHTML = `<div class="date-header">${day}</div>`;
+        }
+        row.appendChild(cell);
+        if ((firstDay + day) % 7 === 0 || day === daysInMonth) {
+          table.appendChild(row);
+          row = document.createElement('tr');
+        }
+      }
+
+      return table;
+    }
+
+    function updateCalendarTable() {
+      const classType = document.getElementById('classType').value;
+      const calendarTableContainer = document.getElementById('calendarTable');
+      const courseOption = document.getElementById('courseOption').value;
+      const requiredClasses = courseOption ? parseInt(courseOption.value.match(/\d+/)[0]) : 0;
+
+      document.getElementById('requiredDates').textContent = requiredClasses;
+      document.getElementById('scheduleSection').classList.add('hidden');
+      calendarTableContainer.innerHTML = '';
+
+      if (classType && schedules[classType]) {
+        document.getElementById('scheduleSection').classList.remove('hidden');
+        const dateTimeSlotMap = {};
+        const availableDates = new Set();
+        Object.entries(schedules[classType]).forEach(([timeSlot, dates]) => {
+          dates.forEach(date => {
+            if (!dateTimeSlotMap[date]) {
+              dateTimeSlotMap[date] = [];
+            }
+            dateTimeSlotMap[date].push(timeSlot);
+            availableDates.add(date);
+          });
+        });
+
+        // Generate calendar for July and August 2025
+        const julyTable = generateCalendarTable(2025, 7, Array.from(availableDates), dateTimeSlotMap);
+        const augustTable = generateCalendarTable(2025, 8, Array.from(availableDates), dateTimeSlotMap);
+        const julyHeader = document.createElement('h3');
+        julyHeader.textContent = '2025年7月';
+        julyHeader.className = 'text-lg font-semibold mt-4 mb-2';
+        const augustHeader = document.createElement('h3');
+        augustHeader.textContent = '2025年8月';
+        augustHeader.className = 'text-lg font-semibold mt-4 mb-2';
+        calendarTableContainer.appendChild(julyHeader);
+        calendarTableContainer.appendChild(julyTable);
+        calendarTableContainer.appendChild(augustHeader);
+        calendarTableContainer.appendChild(augustTable);
+      }
+      updateDateList();
+    }
+
+    function toggleDateTimeSlot(checkbox) {
+      const value = checkbox.value;
+      if (checkbox.checked) {
+        if (!selectedDateTimeSlots.includes(value)) {
+          selectedDateTimeSlots.push(value);
+        }
+      } else {
+        selectedDateTimeSlots = selectedDateTimeSlots.filter(slot => slot !== value);
+      }
+      updateDateList();
+    }
+
+    function updateDateList() {
+      const selectedDatesList = document.getElementById('selectedDatesList');
+      const datesWarning = document.getElementById('datesWarning');
+      const courseOption = document.getElementById('courseOption').value;
+      const requiredClasses = courseOption ? parseInt(courseOption.value.match(/\d+/)[0]) : 0;
+
+      selectedDatesList.innerHTML = '';
+      document.getElementById('selectedDates').value = selectedDateTimeSlots.map(slot => {
+        const [date, ...timeSlotParts] = slot.split(' ');
+        const timeSlot = timeSlotParts.join(' ');
+        const dateObj = new Date(date);
+        const weekday = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][dateObj.getDay()];
+        return `${date.replace(/-/g, '年').replace(/年(\d{2})/, '年$1月').replace(/月(\d{2})/, '月$1日')} ${weekday} ${timeSlot}`;
+      }).join(', ');
+      document.getElementById('selectedDatesCount').textContent = selectedDateTimeSlots.length;
+
+      // Display warning if selected dates exceed or are less than the limit
+      if (selectedDateTimeSlots.length > requiredClasses) {
+        datesWarning.textContent = `已選 ${selectedDateTimeSlots.length} 堂，超出 ${requiredClasses} 堂限額，請移除 ${selectedDateTimeSlots.length - requiredClasses} 堂。`;
+        datesWarning.style.display = 'block';
+      } else if (selectedDateTimeSlots.length < requiredClasses) {
+        datesWarning.textContent = `已選 ${selectedDateTimeSlots.length} 堂，請再選 ${requiredClasses - selectedDateTimeSlots.length} 堂。`;
+        datesWarning.style.display = 'block';
+      } else {
+        datesWarning.textContent = '';
+        datesWarning.style.display = 'none';
+      }
+
+      selectedDateTimeSlots.forEach((slot, index) => {
+        const [date, ...timeSlotParts] = slot.split(' ');
+        const timeSlot = timeSlotParts.join(' ');
+        const dateObj = new Date(date);
+        const weekday = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][dateObj.getDay()];
+        const formattedDate = `${date.replace(/-/g, '年').replace(/年(\d{2})/, '年$1月').replace(/月(\d{2})/, '月$1日')} ${weekday} ${timeSlot}`;
+        const li = document.createElement('li');
+        li.textContent = formattedDate;
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '移除';
+        removeBtn.onclick = () => {
+          selectedDateTimeSlots = selectedDateTimeSlots.filter((_, i) => i !== index);
+          document.getElementById(slot).checked = false;
+          updateDateList();
+        };
+        li.appendChild(removeBtn);
+        selectedDatesList.appendChild(li);
+      });
+    }
+
+    // Form validation and submission
+    const form = document.getElementById('registrationForm');
+    const nameInput = document.getElementById('name');
+    const phoneInput = document.getElementById('phone');
+    const courseOption = document.getElementById('courseOption');
+    const classType = document.getElementById('classType');
+    const nameError = document.getElementById('nameError');
+    const phoneError = document.getElementById('phoneError');
+    const birthdateError = document.getElementById('birthdateError');
+    const genderError = document.getElementById('genderError');
+    const courseError = document.getElementById('courseError');
+    const classTypeError = document.getElementById('classTypeError');
+    const datesError = document.getElementById('datesError');
+    const confirmModal = document.getElementById('confirmModal');
+    const formContainer = document.getElementById('formContainer');
+    const thankYouPage = document.getElementById('thankYouPage');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let isValid = true;
+
+      // Reset error messages
+      nameError.style.display = 'none';
+      phoneError.style.display = 'none';
+      birthdateError.style.display = 'none';
+      genderError.style.display = 'none';
+      courseError.style.display = 'none';
+      classTypeError.style.display = 'none';
+      datesError.style.display = 'none';
+
+      // Validate name
+      if (!nameInput.value.trim()) {
+        nameError.style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate phone
+      if (!phoneInput.value.match(/\+?\d{8,}/)) {
+        phoneError.style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate birthdate
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const day = parseInt(daySelect.value);
+      const selectedDate = new Date(year, month - 1, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (!year || !month || !day || isNaN(selectedDate) || selectedDate > today) {
+        birthdateError.style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate gender
+      if (!form.querySelector('input[name="entry.123456792"]:checked')) {
+        genderError.style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate course option
+      if (!courseOption.value) {
+        courseError.style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate class type
+      if (!classType.value) {
+        classTypeError.style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate dates
+      const selectedDates = document.getElementById('selectedDates').value.split(', ').filter(d => d);
+      const requiredClasses = courseOption.value ? parseInt(courseOption.value.match(/\d+/)[0]) : 0;
+      if (selectedDates.length !== requiredClasses) {
+        datesError.style.display = 'block';
+        datesError.textContent = `請選擇正確的 ${requiredClasses} 個課程日期，當前已選 ${selectedDates.length} 個。`;
+        isValid = false;
+      }
+
+      if (isValid) {
+        // Populate confirmation modal
+        document.getElementById('confirmName').textContent = nameInput.value;
+        document.getElementById('confirmPhone').textContent = phoneInput.value;
+        document.getElementById('confirmBirthdate').textContent = `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
+        document.getElementById('confirmGender').textContent = form.querySelector('input[name="entry.123456792"]:checked').value;
+        document.getElementById('confirmCourse').textContent = courseOption.value;
+        document.getElementById('confirmClassType').textContent = classType.value;
+        const confirmDatesList = document.getElementById('confirmDates');
+        confirmDatesList.innerHTML = selectedDates.map(date => `<li>${date}</li>`).join('');
+        confirmModal.style.display = 'flex';
+      }
+    });
+
+    function cancelSubmission() {
+      confirmModal.style.display = 'none';
+    }
+
+    async function confirmSubmission() {
+      confirmModal.style.display = 'none';
+      
+      const formData = new FormData(form);
+      try {
+        await fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          mode: 'no-cors'
+        });
+        console.log('表單提交成功');
+        formContainer.style.display = 'none';
+        thankYouPage.style.display = 'block';
+      } catch (error) {
+        console.error('提交失敗:', error);
+        alert('表單提交失敗，請稍後再試。');
+      }
+      
+      resetForm();
+    }
+
+    function resetForm() {
+      form.reset();
+      document.querySelectorAll('.course-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('courseOption').value = '';
+      document.getElementById('scheduleSection').classList.add('hidden');
+      document.getElementById('selectedDates').value = '';
+      document.getElementById('selectedDatesCount').textContent = '0';
+      document.getElementById('selectedDatesList').innerHTML = '';
+      document.getElementById('datesWarning').textContent = '';
+      document.getElementById('datesWarning').style.display = 'none';
+      selectedDateTimeSlots = [];
+      document.querySelectorAll('.calendar-table input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      nameError.style.display = 'none';
+      phoneError.style.display = 'none';
+      birthdateError.style.display = 'none';
+      genderError.style.display = 'none';
+      courseError.style.display = 'none';
+      classTypeError.style.display = 'none';
+      datesError.style.display = 'none';
+      updateDays();
+      updateCalendarTable();
+    }
+
+    function restartForm() {
+      thankYouPage.style.display = 'none';
+      formContainer.style.display = 'block';
+      resetForm();
+    }
+  </script>
+</body>
+</html>
