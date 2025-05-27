@@ -35,17 +35,17 @@
       width: 100%;
       padding: 14px;
       border: 1px solid #D1D5DB;
-      border-radius: 10px;
+      border-radius: 8px;
       box-sizing: border-box;
       font-size: 16px;
-      height: 44px;
+      height: 48px;
       line-height: 1.5;
       transition: border-color 0.3s, box-shadow 0.3s;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     #name, #phone {
-      padding-left: 16px;
-      padding-right: 16px;
+      padding-left: 24px;
+      padding-right: 24px;
     }
     input:focus, select:focus {
       outline: none;
@@ -65,7 +65,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0, 0, 0, 0.5);
       justify-content: center;
       align-items: center;
       z-index: 1000;
@@ -75,7 +75,7 @@
       padding: 32px;
       border-radius: 12px;
       width: 90%;
-      max-width: 600px;
+      max-width: 640px;
       max-height: 80vh;
       overflow-y: auto;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
@@ -114,12 +114,12 @@
     button {
       padding: 12px 24px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
       font-weight: 500;
       transition: all 0.3s ease;
-      min-width: 100px;
+      min-width: 120px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     button[type="submit"], button.confirm, button.return-button {
@@ -129,7 +129,7 @@
     button[type="submit"]:hover, button.confirm:hover, button.return-button:hover {
       background-color: #2563EB;
       transform: scale(1.05);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
     }
     button.cancel {
       background-color: #D1D5DB;
@@ -138,7 +138,7 @@
     button.cancel:hover {
       background-color: #B9C2CC;
       transform: scale(1.05);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
     }
     #thankYouPage {
       display: none;
@@ -418,6 +418,7 @@
         <p class="text-sm text-gray-600 mb-4">請在下方表格中點選日期及時段，報讀8堂或以上可享9折優惠。</p>
         <div class="form-group">
           <label>選擇日期與時段（在表格中點選） *</label>
+          <p class="text-sm text-gray-600 mt-2">有*為色帶可參加班別</p>
           <div class="calendar-container">
             <div id="calendar"></div>
           </div>
@@ -466,7 +467,7 @@
 
     const spreadsheetId = '1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU';
     const sheetName = '舊生暑期時間表';
-    const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z&sheet=${encodeURIComponent(sheetName)}`;
+    const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}`;
 
     async function loadScheduleFromSheet() {
       try {
@@ -494,26 +495,42 @@
         if (data.table && data.table.rows && data.table.rows.length > 0) {
           data.table.rows.forEach((row, index) => {
             const classType = row.c[0]?.v?.trim();
-            let timeSlot = row.c[1]?.v?.toString().trim();
-            const hasAsterisk = row.c[2]?.v === '*';
-            const dates = row.c.slice(3)
+            const weekday = row.c[1]?.v?.trim();
+            const timeSlot = row.c[2]?.v?.toString().trim();
+            const hasAsterisk = row.c[3]?.v === '*';
+            const dates = row.c.slice(4)
               .filter(cell => cell && cell.v && /^\d{4}-\d{2}-\d{2}$/.test(cell.v))
-              .map(cell => cell.v);
+              .map(cell => cell.v.trim());
 
-            console.log(`Row ${index + 1}: classType=${classType}, timeSlot=${timeSlot}, hasAsterisk=${hasAsterisk}, dates=${JSON.stringify(dates)}`);
+            console.log(`Row ${index + 1}: classType=${classType}, weekday=${weekday}, timeSlot=${timeSlot}, hasAsterisk=${hasAsterisk}, dates=${JSON.stringify(dates)}`);
 
-            if (classType && timeSlot && dates.length > 0) {
+            const cleanTimeSlot = timeSlot.replace(/\*$/, '').trim();
+            if (classType && cleanTimeSlot && dates.length > 0 && /^星期[一二三四五六日]$/.test(weekday)) {
               if (!newSchedules[classType]) {
                 newSchedules[classType] = {};
               }
-              const cleanTimeSlot = timeSlot.replace(/\*$/, '');
-              const displayTime = cleanTimeSlot.match(/(\d{1,2}:\d{2}(?:am|pm))/i)?.[1] || cleanTimeSlot;
-              newSchedules[classType][cleanTimeSlot] = { displayTime, dates, fullTimeSlot: cleanTimeSlot, hasAsterisk };
+              if (!newSchedules[classType][cleanTimeSlot]) {
+                newSchedules[classType][cleanTimeSlot] = [];
+              }
+              const timeMatch = cleanTimeSlot.match(/^(\d{1,2}:\d{2}\s*(?:am|pm))/i);
+              const startTime = timeMatch ? timeMatch[1] : cleanTimeSlot;
+              const displayTime = cleanTimeSlot.match(/(\d{1,2}:\d{2}\s*(?:am|pm)\s*-\s*\d{1,2}:\d{2}\s*(?:am|pm))/i)?.[0] || cleanTimeSlot;
+              newSchedules[classType][cleanTimeSlot].push({
+                weekday,
+                startTime,
+                displayTime,
+                dates,
+                fullTimeSlot: cleanTimeSlot,
+                hasAsterisk
+              });
+              console.log(`Parsed time: startTime=${startTime}, fullTimeSlot=${cleanTimeSlot}`);
+            } else {
+              console.warn(`Row ${index + 1} skipped: invalid weekday=${weekday}, timeSlot=${cleanTimeSlot}, or no dates`);
             }
           });
 
           if (Object.keys(newSchedules).length === 0) {
-            throw new Error('No valid data parsed. Ensure columns A (class type), B (time slot), C (asterisk), and D:Z (dates) contain valid data.');
+            throw new Error('No valid data parsed. Ensure columns A (class type), B (weekday), C (time slot), D (asterisk), and E:AA (dates) contain valid data.');
           }
 
           schedules = newSchedules;
@@ -523,7 +540,7 @@
           updateCalendar();
           document.getElementById('errorMessage').style.display = 'none';
         } else {
-          throw new Error('No data found in the sheet. Verify sheet name "舊生暑期時間表" and data in columns A:Z.');
+          throw new Error('No data found in the sheet. Verify sheet name "舊生暑期時間表" and data in columns A:AA.');
         }
       } catch (error) {
         console.error('Load schedule error:', error);
@@ -535,10 +552,10 @@
         } else if (error.message.includes('JSON parsing')) {
           userMessage = '試算表數據格式錯誤，請聯繫管理員。';
         } else if (error.message.includes('No data found') || error.message.includes('No valid data')) {
-          userMessage = '試算表無有效數據，請確認「舊生暑期時間表」包含班別（A）、時間段（B）、星號（C）和日期（D:Z）。';
+          userMessage = '試算表無有效數據，請確認「舊生暑期時間表」包含班別（A）、星期（B）、時間段（C）、星號（D）和日期（E:AA）。';
         }
         showError(`${userMessage}（錯誤：${error.message}）`);
-        document.getElementById('calendar').innerHTML = '<p class="text-red-600">無法載入課程時間表，請稍後再試。</p>';
+        document.getElementById('calendar').innerHTML = '<p class="text-red-600 text-center">無法載入課程時間表，請稍後再試。</p>';
       }
     }
 
@@ -602,6 +619,12 @@
       return formatted;
     }
 
+    function formatDateWithDay(date, timeSlot, classType, weekday) {
+      const dayOfWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][date.getDay()];
+      const cleanTimeSlot = timeSlot.trim();
+      return `${formatDateString(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`)} ${dayOfWeek} ${cleanTimeSlot} (${classType})`;
+    }
+
     function updateCalendar() {
       const classType = document.getElementById('classType').value;
       const calendarContainer = document.getElementById('calendar');
@@ -620,14 +643,24 @@
       }
 
       const availableDates = classType && schedules[classType]
-        ? Array.from(new Set(Object.values(schedules[classType]).flatMap(s => s.dates)))
+        ? Array.from(new Set(
+            Object.values(schedules[classType]).flatMap(slots =>
+              slots.flatMap(slot => slot.dates)
+            )
+          ))
         : [];
 
       console.log('Available dates:', availableDates);
+      const mondayDates = availableDates.filter(date => new Date(date).getDay() === 1);
+      const tuesdayDates = availableDates.filter(date => new Date(date).getDay() === 2);
+      const sundayDates = availableDates.filter(date => new Date(date).getDay() === 0);
+      console.log('Monday dates:', mondayDates);
+      console.log('Tuesday dates:', tuesdayDates);
+      console.log('Sunday dates:', sundayDates);
 
       if (availableDates.length === 0) {
         console.warn('No available dates for selected class type');
-        calendarContainer.innerHTML = '<p class="text-gray-600">無可用課程日期</p>';
+        calendarContainer.innerHTML = '<p class="text-gray-600 text-center">無可用課程日期</p>';
         updateClassCountPrompt();
         showError('無可用課程日期，請確認試算表數據。');
         return;
@@ -641,14 +674,30 @@
         console.log('Creating calendar table for:', monthName);
         const weeks = [];
         let week = [];
+
+        const firstDay = new Date(dates[0]);
+        const firstDayOfWeek = firstDay.getDay();
+        const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+        if (startOffset > 0) {
+          week = new Array(startOffset).fill(null);
+        }
+
         dates.forEach((date, index) => {
-          if (date.getDay() === 1 || week.length === 0) {
-            if (week.length > 0) weeks.push(week);
+          week.push(date);
+          if (week.length === 7 || index === dates.length - 1) {
+            weeks.push(week);
             week = [];
           }
-          week.push(date);
-          if (index === dates.length - 1 && week.length > 0) weeks.push(week);
         });
+
+        if (week.length > 0) {
+          while (week.length < 7) {
+            week.push(null);
+          }
+          weeks.push(week);
+        }
+
+        console.log('Generated weeks:', weeks.map(w => w.map(d => d ? d.toISOString() : null)));
 
         const title = document.createElement('div');
         title.className = 'calendar-title';
@@ -668,14 +717,9 @@
         table.appendChild(thead);
 
         const tbody = document.createElement('tbody');
-        weeks.forEach(week => {
+        weeks.forEach((week, weekIndex) => {
           const tr = document.createElement('tr');
-          const weekDays = Array(7).fill(null);
-          week.forEach(date => {
-            weekDays[date.getDay() === 0 ? 6 : date.getDay() - 1] = date;
-          });
-
-          weekDays.forEach(day => {
+          week.forEach((day, dayIndex) => {
             const td = document.createElement('td');
             if (day) {
               const dateStr = `${day.getFullYear()}-${(day.getMonth() + 1).toString().padStart(2, '0')}-${day.getDate().toString().padStart(2, '0')}`;
@@ -684,36 +728,57 @@
               dateDiv.textContent = `${day.getMonth() + 1}/${day.getDate()}`;
               td.appendChild(dateDiv);
 
+              console.log(`Rendering date: ${dateStr}, day of week: ${day.getDay()}`);
+
               if (availableDates.includes(dateStr)) {
-                const timeSlots = Object.entries(schedules[classType]).filter(([_, slot]) => slot.dates.includes(dateStr));
+                const timeSlots = [];
+                Object.entries(schedules[classType]).forEach(([timeSlot, slots]) => {
+                  slots.forEach(slot => {
+                    if (slot.dates.includes(dateStr)) {
+                      timeSlots.push({ timeSlot, slot });
+                    }
+                  });
+                });
+
                 if (timeSlots.length > 0) {
                   const slotDiv = document.createElement('div');
                   slotDiv.className = 'time-slot';
-                  timeSlots.forEach(([timeSlot, slot]) => {
+                  timeSlots.forEach(({ timeSlot, slot }) => {
                     const span = document.createElement('span');
-                    span.textContent = slot.hasAsterisk ? `${slot.displayTime}*` : slot.displayTime;
+                    span.textContent = slot.hasAsterisk ? `${slot.startTime}*` : slot.startTime;
                     span.dataset.date = dateStr;
                     span.dataset.timeSlot = timeSlot;
+                    span.dataset.weekday = slot.weekday;
                     span.classList.toggle('selected', previousSelectedDates.some(d =>
-                      d.classType === classType && d.date === dateStr && d.timeSlot === timeSlot));
+                      d.classType === classType &&
+                      d.date === dateStr &&
+                      d.timeSlot === timeSlot &&
+                      d.weekday === slot.weekday
+                    ));
                     span.addEventListener('click', () => {
                       const isSelected = span.classList.contains('selected');
                       if (isSelected) {
                         previousSelectedDates = previousSelectedDates.filter(d =>
-                          !(d.classType === classType && d.date === dateStr && d.timeSlot === timeSlot));
+                          !(d.classType === classType &&
+                            d.date === dateStr &&
+                            d.timeSlot === timeSlot &&
+                            d.weekday === slot.weekday)
+                        );
                         span.classList.remove('selected');
                       } else {
-                        previousSelectedDates.push({ classType, date: dateStr, timeSlot });
+                        previousSelectedDates.push({
+                          classType,
+                          date: dateStr,
+                          timeSlot,
+                          weekday: slot.weekday
+                        });
                         span.classList.add('selected');
                       }
                       previousSelectedDates.sort((a, b) => a.date.localeCompare(b.date));
                       document.getElementById('selectedDates').value = previousSelectedDates
-                        .map(d => {
-                          const dateObj = new Date(d.date);
-                          const dayOfWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][dateObj.getDay()];
-                          return `${formatDateString(d.date)} ${dayOfWeek} ${d.timeSlot} (${d.classType})`;
-                        })
+                        .map(d => formatDateWithDay(new Date(d.date), d.timeSlot, d.classType, d.weekday))
                         .join(', ');
+                      console.log('Updated selectedDates:', document.getElementById('selectedDates').value);
                       updateClassCountPrompt();
                     });
                     slotDiv.appendChild(span);
@@ -721,7 +786,7 @@
                   td.appendChild(slotDiv);
                 } else {
                   td.classList.add('disabled');
-                  td.innerHTML += '<div class="time-slot"><span style="background:none;cursor:default;color:#9CA3AF;">無可用時間</span></div>';
+                  td.innerHTML += '<div class="time-slot"><span style="background:none;color:#9CA3AF;">無可用時間</span></div>';
                 }
               } else {
                 td.classList.add('disabled');
@@ -806,12 +871,9 @@
       document.getElementById('confirmClassType').textContent = [...new Set(selectedDates.map(d => d.classType))].join(', ');
       const confirmDatesList = document.getElementById('confirmDates');
       confirmDatesList.innerHTML = selectedDates
-        .map(date => {
-          const dateObj = new Date(date.date);
-          const dayOfWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][dateObj.getDay()];
-          return `<li>${formatDateString(date.date)} ${dayOfWeek} ${date.timeSlot} (${date.classType})</li>`;
-        })
+        .map(date => `<li>${formatDateWithDay(new Date(date.date), date.timeSlot, date.classType, date.weekday)}</li>`)
         .join('');
+      console.log('Confirm dates displayed:', confirmDatesList.innerHTML);
 
       const discountWarning = document.getElementById('discountWarning');
       if (classCount < 8) {
@@ -835,7 +897,7 @@
       confirmModal.style.display = 'none';
 
       if (!thankYouPage) {
-        console.error('thankYouPage element not found');
+        console.error('Error message:', 'thankYouPage element not found');
         showError('感謝頁無法顯示，請聯繫管理員');
         return;
       }
@@ -859,7 +921,7 @@
         thankYouPage.classList.add('active');
         window.scrollTo(0, 0);
       } catch (error) {
-        console.error('Submission error details:', error);
+        console.error('Submission error:', error);
         showError(`表單提交失敗，請稍後再試。（錯誤：${error.message}）`);
         console.log('Showing thankYouPage as fallback');
         formContainer.style.display = 'none';
@@ -871,7 +933,7 @@
 
     function resetForm() {
       form.reset();
-      document.getElementById('scheduleSection').style.display = 'none';
+      document.getElementById('scheduleSection').classList.add('hidden');
       document.getElementById('selectedDates').value = '';
       document.getElementById('totalClasses').value = '';
       previousSelectedDates = [];
