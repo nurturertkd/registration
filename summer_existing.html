@@ -54,59 +54,6 @@
       border-color: #3B82F6;
       box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
     }
-    .date-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .date-group select {
-      width: 120px;
-      height: 44px;
-    }
-    .date-group span {
-      font-size: 16px;
-      color: #1F2937;
-    }
-    .gender-group {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-    }
-    .gender-group label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    input[type="radio"] {
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #D1D5DB;
-      border-radius: 50%;
-      background: white;
-      position: relative;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    input[type="radio"]:hover {
-      border-color: #3B82F6;
-    }
-    input[type="radio"]:checked {
-      border-color: #3B82F6;
-    }
-    input[type="radio"]:checked::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #3B82F6;
-    }
     .error {
       color: #EF4444;
       font-size: 14px;
@@ -333,31 +280,6 @@
         padding-left: 12px;
         padding-right: 12px;
       }
-      .date-group {
-        gap: 8px;
-      }
-      .date-group select {
-        width: 100px;
-        height: 40px;
-      }
-      .date-group span {
-        font-size: 14px;
-      }
-      .gender-group {
-        gap: 16px;
-      }
-      .gender-group label {
-        font-size: 14px;
-        gap: 6px;
-      }
-      input[type="radio"] {
-        width: 18px;
-        height: 18px;
-      }
-      input[type="radio"]:checked::after {
-        width: 10px;
-        height: 10px;
-      }
       .modal-content {
         width: 95%;
         padding: 24px;
@@ -442,44 +364,19 @@
       <p class="spacer"></p>
     </div>
 
-    <form id="registrationForm" action="https://docs.google.com/forms/d/e/1FAIpQLScxNYEXWMkoCU7UffKYNPRXBWtfxk0w7H5cTApecn8MJcxdyg/formResponse" method="POST" class="space-y-8">
+    <form id="registrationForm" action="https://docs.google.com/forms/d/e/1FAIpQLSe0kOPO9hkI1TmXDOGEMSonsd79Lu5Cenam3qqexGpKctca-Kw/formResponse" method="POST" class="space-y-8">
       <!-- 學員資訊 -->
       <div class="form-group">
         <h2 class="text-xl font-semibold mb-4 text-gray-800">學員資訊</h2>
         <div class="form-group">
           <label for="name">學員中文姓名 *</label>
-          <input type="text" id="name" name="entry.520929458" required>
+          <input type="text" id="name" name="entry.1485466301" required>
           <span id="nameError" class="error">請輸入學員姓名</span>
         </div>
         <div class="form-group">
           <label for="phone">聯絡電話（需接收WhatsApp訊息） *</label>
-          <input type="tel" id="phone" name="entry.1848250356" pattern="\+?\d{8,}" required>
+          <input type="tel" id="phone" name="entry.1919163075" pattern="\+?\d{8,}" required>
           <span id="phoneError" class="error">請輸入有效的電話號碼</span>
-        </div>
-        <div class="form-group">
-          <label for="birthYear">出生日期 *</label>
-          <div class="date-group">
-            <select id="birthYear" name="entry.68040101_year" required>
-              <option value="">年</option>
-            </select>
-            <span>/</span>
-            <select id="birthMonth" name="entry.68040101_month" required>
-              <option value="">月</option>
-            </select>
-            <span>/</span>
-            <select id="birthDay" name="entry.68040101_day" required>
-              <option value="">日</option>
-            </select>
-          </div>
-          <span id="birthdateError" class="error">請選擇有效的出生日期（不得晚於今日）</span>
-        </div>
-        <div class="form-group">
-          <label>性別 *</label>
-          <div class="gender-group">
-            <label><input type="radio" name="entry.1745029240" value="男" required> 男</label>
-            <label><input type="radio" name="entry.1745029240" value="女"> 女</label>
-          </div>
-          <span id="genderError" class="error">請選擇性別</span>
         </div>
       </div>
 
@@ -489,11 +386,11 @@
         <div class="form-group">
           <label>報名課堂（早鳥9折優惠） *</label>
           <p class="text-gray-600 mt-2">7月至8月期間，只要報讀8堂或以上，即可有9折優惠，$180/堂(原價$200)</p>
-          <input type="hidden" id="totalClasses" name="entry.714236598">
+          <input type="hidden" id="totalClasses" name="entry.1451557446">
         </div>
         <div class="form-group">
           <label for="classType">所選班別 *</label>
-          <select id="classType" name="entry.750153756" required class="w-full" onchange="updateCalendar()">
+          <select id="classType" name="entry.781986668" required class="w-full" onchange="updateCalendar()">
             <option value="" disabled selected>請選擇</option>
           </select>
           <span id="classTypeError" class="error">請選擇班別</span>
@@ -512,7 +409,7 @@
           <p id="classCountPrompt"></p>
           <span id="datesError" class="error">請選擇至少1個課程日期</span>
         </div>
-        <input type="hidden" name="entry.363732204" id="selectedDates">
+        <input type="hidden" name="entry.1595158618" id="selectedDates">
       </div>
 
       <!-- 按鈕 -->
@@ -529,8 +426,6 @@
       <h2 class="text-xl font-semibold mb-4">請確認您的報名資料</h2>
       <p><strong>學員中文姓名：</strong> <span id="confirmName"></span></p>
       <p><strong>聯絡電話：</strong> <span id="confirmPhone"></span></p>
-      <p><strong>出生日期：</strong> <span id="confirmBirthdate"></span></p>
-      <p><strong>性別：</strong> <span id="confirmGender"></span></p>
       <p><strong>報名課堂：</strong> <span id="confirmTotalClasses"></span></p>
       <p><strong>所選班別：</strong> <span id="confirmClassType"></span></p>
       <p><strong>課程日期與時段：</strong></p>
@@ -654,55 +549,6 @@
         classTypeSelect.appendChild(option);
       });
     }
-
-    // Populate birthdate dropdowns
-    const yearSelect = document.getElementById('birthYear');
-    const monthSelect = document.getElementById('birthMonth');
-    const daySelect = document.getElementById('birthDay');
-    const currentYear = new Date().getFullYear();
-
-    for (let year = currentYear; year >= 1900; year--) {
-      let option = document.createElement('option');
-      option.value = year;
-      option.textContent = year;
-      yearSelect.appendChild(option);
-    }
-
-    for (let month = 1; month <= 12; month++) {
-      let option = document.createElement('option');
-      option.value = month;
-      option.textContent = month.toString().padStart(2, '0');
-      monthSelect.appendChild(option);
-    }
-
-    function isLeapYear(year) {
-      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-    }
-
-    function updateDays() {
-      const year = parseInt(yearSelect.value);
-      const month = parseInt(monthSelect.value);
-      daySelect.innerHTML = '<option value="">日</option>';
-
-      if (year && month) {
-        let daysInMonth;
-        if (month === 2) {
-          daysInMonth = isLeapYear(year) ? 29 : 28;
-        } else {
-          daysInMonth = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
-        }
-        for (let day = 1; day <= daysInMonth; day++) {
-          let option = document.createElement('option');
-          option.value = day;
-          option.textContent = day.toString().padStart(2, '0');
-          daySelect.appendChild(option);
-        }
-      }
-    }
-
-    yearSelect.addEventListener('change', updateDays);
-    monthSelect.addEventListener('change', updateDays);
-    updateDays();
 
     // Calendar initialization
     function generateCalendarDates() {
@@ -883,8 +729,6 @@
     const classType = document.getElementById('classType');
     const nameError = document.getElementById('nameError');
     const phoneError = document.getElementById('phoneError');
-    const birthdateError = document.getElementById('birthdateError');
-    const genderError = document.getElementById('genderError');
     const classTypeError = document.getElementById('classTypeError');
     const datesError = document.getElementById('datesError');
     const confirmModal = document.getElementById('confirmModal');
@@ -897,8 +741,6 @@
 
       nameError.style.display = 'none';
       phoneError.style.display = 'none';
-      birthdateError.style.display = 'none';
-      genderError.style.display = 'none';
       classTypeError.style.display = 'none';
       datesError.style.display = 'none';
 
@@ -909,23 +751,6 @@
 
       if (!phoneInput.value.match(/\+?\d{8,}/)) {
         phoneError.style.display = 'block';
-        isValid = false;
-      }
-
-      const year = parseInt(yearSelect.value);
-      const month = parseInt(monthSelect.value);
-      const day = parseInt(daySelect.value);
-      const selectedDate = new Date(year, month - 1, day);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (!year || !month || !day || isNaN(selectedDate) || selectedDate > today) {
-        birthdateError.style.display = 'block';
-        isValid = false;
-      }
-
-      if (!form.querySelector('input[name="entry.1745029240"]:checked')) {
-        genderError.style.display = 'block';
         isValid = false;
       }
 
@@ -941,12 +766,9 @@
         const totalPrice = calculateTotalPrice(classCount);
         const classTypes = [...new Set(selectedDates.map(d => d.classType))].join(', ');
         document.getElementById('totalClasses').value = `共 ${classCount} 堂，$${totalPrice}`;
-        document.getElementById('classType').value = classTypes;
 
         document.getElementById('confirmName').textContent = nameInput.value;
         document.getElementById('confirmPhone').textContent = phoneInput.value;
-        document.getElementById('confirmBirthdate').textContent = `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
-        document.getElementById('confirmGender').textContent = form.querySelector('input[name="entry.1745029240"]:checked').value;
         document.getElementById('confirmTotalClasses').textContent = `共 ${classCount} 堂，$${totalPrice}`;
         document.getElementById('confirmClassType').textContent = classTypes;
         const confirmDatesList = document.getElementById('confirmDates');
@@ -956,7 +778,7 @@
 
         const discountWarning = document.getElementById('discountWarning');
         if (classCount < 8) {
-          discountWarning.textContent = '您選擇的課程少於8堂，無法享有9折優惠（$180/堂），將以原價$200/堂計算。';
+          discountWarning.textContent = '您選擇的課程少於8堂，無法享有9折優惠（$180/堂），將按原價$200/堂計算。';
           discountWarning.style.display = 'block';
         } else {
           discountWarning.style.display = 'none';
@@ -972,24 +794,24 @@
 
     async function confirmSubmission() {
       confirmModal.style.display = 'none';
-      
+
       const formData = new FormData(form);
-      formData.set('entry.750153756', [...new Set(previousSelectedDates.map(d => d.classType))].join(', '));
+      formData.set('entry.781986618', [...new Set(previousSelectedDates.map(d => d.classType))].join(', '));
+      formData.set('entry.1451557446', document.getElementById('totalClasses').value);
+
       try {
         const response = await fetch(form.action, {
           method: 'POST',
           body: formData,
           mode: 'no-cors'
         });
-        console.log('表單提交成功');
+        console.log('成功提交表單');
         formContainer.style.display = 'none';
         thankYouPage.style.display = 'block';
       } catch (error) {
         console.error('提交失敗:', error);
         showError('表單提交失敗，請稍後再試。');
       }
-      
-      resetForm();
     }
 
     function resetForm() {
@@ -1002,12 +824,9 @@
       document.getElementById('classCountPrompt').textContent = '';
       nameError.style.display = 'none';
       phoneError.style.display = 'none';
-      birthdateError.style.display = 'none';
-      genderError.style.display = 'none';
       classTypeError.style.display = 'none';
       datesError.style.display = 'none';
       document.getElementById('errorMessage').style.display = 'none';
-      updateDays();
       updateCalendar();
     }
 
