@@ -525,12 +525,12 @@
               });
               console.log(`Parsed time: startTime=${startTime}, fullTimeSlot=${cleanTimeSlot}`);
             } else {
-              console.warn(`Row ${index + 1} skipped: invalid weekday=${weekday}, timeSlot=${cleanTimeSlot}, or no dates`);
+              console.warn(`Row ${index + 1} skipped: invalid classType=${classType}, weekday=${weekday}, timeSlot=${cleanTimeSlot}, or no dates`);
             }
           });
 
           if (Object.keys(newSchedules).length === 0) {
-            throw new Error('No valid data parsed. Ensure columns A (class type), B (weekday), C (time slot), D (asterisk), and E:AA (dates) contain valid data.');
+            throw new Error('No valid class types found. Ensure column A contains class types (e.g., 品勢班), B has valid weekdays (e.g., 星期二), C has time slots (e.g., 9:15am - 10:15am), and E:AA have dates (e.g., 2025-07-08).');
           }
 
           schedules = newSchedules;
@@ -540,7 +540,7 @@
           updateCalendar();
           document.getElementById('errorMessage').style.display = 'none';
         } else {
-          throw new Error('No data found in the sheet. Verify sheet name "舊生暑期時間表" and data in columns A:AA.');
+          throw new Error('No data found in the sheet. Verify sheet name "舊生暑期時間表" and ensure data exists in columns A:AA.');
         }
       } catch (error) {
         console.error('Load schedule error:', error);
@@ -551,7 +551,7 @@
           userMessage = '試算表未公開，請在 Google 試算表設定為「任何人擁有連結即可查看」。';
         } else if (error.message.includes('JSON parsing')) {
           userMessage = '試算表數據格式錯誤，請聯繫管理員。';
-        } else if (error.message.includes('No data found') || error.message.includes('No valid data')) {
+        } else if (error.message.includes('No data found') || error.message.includes('No valid class types')) {
           userMessage = '試算表無有效數據，請確認「舊生暑期時間表」包含班別（A）、星期（B）、時間段（C）、星號（D）和日期（E:AA）。';
         }
         showError(`${userMessage}（錯誤：${error.message}）`);
@@ -574,6 +574,12 @@
       defaultOption.disabled = true;
       defaultOption.selected = true;
       classTypeSelect.appendChild(defaultOption);
+
+      console.log('Available class types:', Object.keys(schedules));
+      if (Object.keys(schedules).length === 0) {
+        showError('無班別選項，請確認試算表數據是否正確或已公開。');
+        return;
+      }
 
       Object.keys(schedules).forEach(classType => {
         const option = document.createElement('option');
@@ -822,7 +828,7 @@
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      console.log('Submit button clicked');
+      console.log('Form submission started');
       let isValid = true;
 
       nameError.style.display = 'none';
@@ -873,7 +879,7 @@
       confirmDatesList.innerHTML = selectedDates
         .map(date => `<li>${formatDateWithDay(new Date(date.date), date.timeSlot, date.classType, date.weekday)}</li>`)
         .join('');
-      console.log('Confirm dates displayed:', confirmDatesList.innerHTML);
+      console.log('Confirmation dates:', confirmDatesList.innerHTML);
 
       const discountWarning = document.getElementById('discountWarning');
       if (classCount < 8) {
@@ -883,22 +889,22 @@
         discountWarning.style.display = 'none';
       }
 
-      console.log('Showing confirmModal');
+      console.log('Showing confirmation modal');
       confirmModal.style.display = 'flex';
     });
 
     function cancelSubmission() {
-      console.log('Cancel button clicked');
+      console.log('Submission cancelled');
       confirmModal.style.display = 'none';
     }
 
     async function confirmSubmission() {
-      console.log('Confirm button clicked');
+      console.log('Confirming submission');
       confirmModal.style.display = 'none';
 
       if (!thankYouPage) {
-        console.error('Error message:', 'thankYouPage element not found');
-        showError('感謝頁無法顯示，請聯繫管理員');
+        console.error('Error: thankYouPage element not found');
+        showError('感謝頁面無法顯示，請聯繫管理員');
         return;
       }
 
@@ -914,8 +920,8 @@
           body: formData,
           mode: 'no-cors'
         });
-        console.log('Form submission response:', response.status || 'success (no-cors)');
-        console.log('Showing thankYouPage');
+        console.log('Submission response:', response.status || 'success (no-cors)');
+        console.log('Showing thank you page');
         formContainer.style.display = 'none';
         thankYouPage.style.display = 'block';
         thankYouPage.classList.add('active');
@@ -923,7 +929,7 @@
       } catch (error) {
         console.error('Submission error:', error);
         showError(`表單提交失敗，請稍後再試。（錯誤：${error.message}）`);
-        console.log('Showing thankYouPage as fallback');
+        console.log('Showing thank you page as fallback');
         formContainer.style.display = 'none';
         thankYouPage.style.display = 'block';
         thankYouPage.classList.add('active');
@@ -932,31 +938,44 @@
     }
 
     function resetForm() {
-      form.reset();
-      document.getElementById('scheduleSection').classList.add('hidden');
-      document.getElementById('selectedDates').value = '';
-      document.getElementById('totalClasses').value = '';
-      previousSelectedDates = [];
-      document.getElementById('calendar').innerHTML = '';
-      document.getElementById('classCountPrompt').textContent = '';
-      nameError.style.display = 'none';
-      phoneError.style.display = 'none';
-      classTypeError.style.display = 'none';
-      datesError.style.display = 'none';
-      document.getElementById('errorMessage').style.display = 'none';
-      updateCalendar();
+      try {
+        console.log('Resetting form');
+        form.reset();
+        document.getElementById('scheduleSection').classList.add('hidden');
+        document.getElementById('selectedDates').value = '';
+        document.getElementById('totalClasses').value = '';
+        previousSelectedDates = [];
+        document.getElementById('calendar').innerHTML = '';
+        document.getElementById('classCountPrompt').textContent = '';
+        nameError.style.display = 'none';
+        phoneError.style.display = 'none';
+        classTypeError.style.display = 'none';
+        datesError.style.display = 'none';
+        document.getElementById('errorMessage').style.display = 'none';
+        updateCalendar();
+        console.log('Form reset successful');
+      } catch (error) {
+        console.error('Reset form error:', error);
+        showError('表單重置失敗，請稍後再試。');
+      }
     }
 
     function restartForm() {
-      thankYouPage.style.display = 'none';
-      thankYouPage.classList.remove('active');
-      formContainer.style.display = 'block';
-      resetForm();
-      window.scrollTo(0, 0);
+      try {
+        console.log('Restarting form');
+        thankYouPage.style.display = 'none';
+        thankYouPage.classList.remove('active');
+        formContainer.style.display = 'block';
+        resetForm();
+        window.scrollTo(0, 0);
+        console.log('Form restart successful');
+      } catch (error) {
+        console.error('Restart form error:', error);
+        showError('表單重新啟動失敗，請稍後再試。');
+      }
     }
 
     loadScheduleFromSheet();
-    setInterval(loadScheduleFromSheet, 60000);
   </script>
 </body>
 </html>
