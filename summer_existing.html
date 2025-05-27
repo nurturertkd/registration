@@ -436,8 +436,8 @@
       <p class="spacer"></p>
       <p>成功提交報名後，您將收到WhatsApp確認訊息，以及付款詳情💬</p>
       <p class="spacer"></p>
-      <p><strong>早鳥優惠，立刻報名!🔥</strong></p>
-      <p>成功於6月22日或之前成功報名及完成付款，將可享有9折優惠!</p>
+      <p><strong>暑期9折優惠，立刻報名!🔥</strong></p>
+      <p>現有學生只要7月及8月期間報讀8堂或以上，即可享有9折優惠!</p>
       <p class="spacer"></p>
       <p class="spacer"></p>
     </div>
@@ -754,7 +754,7 @@
         scheduleSection.classList.remove('hidden');
       } else {
         scheduleSection.classList.add('hidden');
-        updateClassCountPrompt(0);
+        updateClassCountPrompt(previousSelectedDates.length);
         return;
       }
 
@@ -767,15 +767,10 @@
       if (availableDates.length === 0) {
         console.warn('No available dates for selected class type');
         calendarContainer.innerHTML = '<p class="text-gray-600">無可用課程日期</p>';
-        updateClassCountPrompt(0);
+        updateClassCountPrompt(previousSelectedDates.length);
         showError('無可用課程日期，請確認試算表數據。');
         return;
       }
-
-      previousSelectedDates = previousSelectedDates.filter(d =>
-        schedules[classType] && schedules[classType][d.timeSlot] &&
-        schedules[classType][d.timeSlot].dates.includes(d.date)
-      );
 
       updateClassCountPrompt(previousSelectedDates.length);
 
@@ -837,19 +832,21 @@
                     span.textContent = slot.displayTime;
                     span.dataset.date = dateStr;
                     span.dataset.timeSlot = timeSlot;
-                    span.classList.toggle('selected', previousSelectedDates.some(d => d.date === dateStr && d.timeSlot === timeSlot));
+                    span.classList.toggle('selected', previousSelectedDates.some(d =>
+                      d.classType === classType && d.date === dateStr && d.timeSlot === timeSlot));
                     span.addEventListener('click', () => {
                       const isSelected = span.classList.contains('selected');
                       if (isSelected) {
-                        previousSelectedDates = previousSelectedDates.filter(d => !(d.date === dateStr && d.timeSlot === timeSlot));
+                        previousSelectedDates = previousSelectedDates.filter(d =>
+                          !(d.classType === classType && d.date === dateStr && d.timeSlot === timeSlot));
                         span.classList.remove('selected');
                       } else {
-                        previousSelectedDates.push({ date: dateStr, timeSlot });
+                        previousSelectedDates.push({ classType, date: dateStr, timeSlot });
                         span.classList.add('selected');
                       }
                       previousSelectedDates.sort((a, b) => a.date.localeCompare(b.date));
                       document.getElementById('selectedDates').value = previousSelectedDates
-                        .map(d => `${formatDateString(d.date)} (${d.timeSlot})`)
+                        .map(d => `${formatDateString(d.date)} ${d.timeSlot} (${d.classType})`)
                         .join(', ');
                       updateClassCountPrompt(previousSelectedDates.length);
                     });
@@ -858,7 +855,7 @@
                   td.appendChild(slotDiv);
                 } else {
                   td.className = 'disabled';
-                  td.innerHTML += '<div class="time-slot"><span style="background-color: transparent; cursor: default; color: #9CA3AF;">無課程</span></div>';
+                  td.innerHTML += '<div class="time-slot"><span style="background:none;cursor:default;color:#9CA3AF;">無可用時間</span></div>';
                 }
               } else {
                 td.className = 'disabled';
@@ -932,11 +929,6 @@
         isValid = false;
       }
 
-      if (!classType.value) {
-        classTypeError.style.display = 'block';
-        isValid = false;
-      }
-
       const selectedDates = previousSelectedDates;
       if (selectedDates.length === 0) {
         datesError.style.display = 'block';
@@ -947,17 +939,19 @@
       if (isValid) {
         const classCount = selectedDates.length;
         const totalPrice = calculateTotalPrice(classCount);
+        const classTypes = [...new Set(selectedDates.map(d => d.classType))].join(', ');
         document.getElementById('totalClasses').value = `共 ${classCount} 堂，$${totalPrice}`;
+        document.getElementById('classType').value = classTypes;
 
         document.getElementById('confirmName').textContent = nameInput.value;
         document.getElementById('confirmPhone').textContent = phoneInput.value;
         document.getElementById('confirmBirthdate').textContent = `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
         document.getElementById('confirmGender').textContent = form.querySelector('input[name="entry.1745029240"]:checked').value;
         document.getElementById('confirmTotalClasses').textContent = `共 ${classCount} 堂，$${totalPrice}`;
-        document.getElementById('confirmClassType').textContent = classType.value;
+        document.getElementById('confirmClassType').textContent = classTypes;
         const confirmDatesList = document.getElementById('confirmDates');
         confirmDatesList.innerHTML = selectedDates
-          .map(date => `<li>${formatDateString(date.date)} ${date.timeSlot}</li>`)
+          .map(date => `<li>${formatDateString(date.date)} ${date.timeSlot} (${date.classType})</li>`)
           .join('');
 
         const discountWarning = document.getElementById('discountWarning');
@@ -980,6 +974,7 @@
       confirmModal.style.display = 'none';
       
       const formData = new FormData(form);
+      formData.set('entry.750153756', [...new Set(previousSelectedDates.map(d => d.classType))].join(', '));
       try {
         const response = await fetch(form.action, {
           method: 'POST',
