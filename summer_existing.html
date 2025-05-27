@@ -1,0 +1,1057 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2025年暑期跆拳道班報名表格</title>
+  <!-- Google Fonts: Noto Sans TC -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', Arial, sans-serif;
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #E0F2FE 0%, #F3F4F6 100%);
+      color: #1F2937;
+    }
+    .form-container {
+      background: white;
+      padding: 48px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    .form-group {
+      margin-bottom: 32px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 500;
+      font-size: 16px;
+      color: #1F2937;
+    }
+    input, select {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #D1D5DB;
+      border-radius: 10px;
+      box-sizing: border-box;
+      font-size: 16px;
+      height: 44px;
+      line-height: 1.5;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    #name, #phone {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+    }
+    .date-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .date-group select {
+      width: 120px;
+      height: 44px;
+    }
+    .date-group span {
+      font-size: 16px;
+      color: #1F2937;
+    }
+    .gender-group {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .gender-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    input[type="radio"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #D1D5DB;
+      border-radius: 50%;
+      background: white;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    input[type="radio"]:hover {
+      border-color: #3B82F6;
+    }
+    input[type="radio"]:checked {
+      border-color: #3B82F6;
+    }
+    input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3B82F6;
+    }
+    .error {
+      color: #EF4444;
+      font-size: 14px;
+      margin-top: 6px;
+      display: none;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 32px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    .modal-content p {
+      font-size: 16px;
+      margin: 12px 0;
+    }
+    .modal-content ul {
+      padding-left: 20px;
+      margin: 12px 0;
+    }
+    .modal-content ul li {
+      font-size: 16px;
+      line-height: 1.8;
+      list-style: none;
+      position: relative;
+    }
+    .modal-content ul li::before {
+      content: '•';
+      position: absolute;
+      left: -20px;
+      color: #3B82F6;
+    }
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      min-width: 100px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    button[type="submit"], button.confirm, button.return-button {
+      background-color: #3B82F6;
+      color: white;
+    }
+    button[type="submit"]:hover, button.confirm:hover, button.return-button:hover {
+      background-color: #2563EB;
+      transform: scale(1.05);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    button.cancel {
+      background-color: #D1D5DB;
+      color: #1F2937;
+    }
+    button.cancel:hover {
+      background-color: #B9C2CC;
+      transform: scale(1.05);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    #thankYouPage {
+      display: none;
+      background: white;
+      padding: 48px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+    #thankYouPage h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: #1F2937;
+    }
+    #thankYouPage p {
+      font-size: 16px;
+      margin: 16px 0;
+      color: #166534;
+    }
+    .calendar-container {
+      max-width: 100%;
+      overflow-x: auto;
+      padding: 0 8px;
+    }
+    .calendar-table {
+      width: 100%;
+      max-width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 16px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .calendar-table.july {
+      background: #DBEAFE;
+    }
+    .calendar-table.august {
+      background: #D1FAE5;
+    }
+    .calendar-table th, .calendar-table td {
+      padding: 14px;
+      text-align: center;
+      font-size: 14px;
+      min-width: 48px;
+    }
+    .calendar-table th {
+      background-color: #1E3A8A;
+      color: white;
+      font-weight: 500;
+    }
+    .calendar-table td {
+      background-color: #F9FAFB;
+      vertical-align: top;
+      transition: background-color 0.3s ease;
+    }
+    .calendar-table td.disabled {
+      background-color: #E5E7EB;
+      color: #9CA3AF;
+      cursor: not-allowed;
+    }
+    .calendar-table .date {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1F2937;
+    }
+    .calendar-table .time-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .calendar-table .time-slot span {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background-color: #E5E7EB;
+    }
+    .calendar-table .time-slot span:hover {
+      background-color: #93C5FD;
+      transform: scale(1.05);
+    }
+    .calendar-table .time-slot span.selected {
+      background-color: #3B82F6;
+      color: white;
+      transform: scale(1.05);
+    }
+    .calendar-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1F2937;
+    }
+    .intro-text p {
+      margin-bottom: 8px;
+    }
+    .intro-text .spacer {
+      height: 16px;
+      margin: 0;
+    }
+    h1 {
+      line-height: 1.4;
+    }
+    #errorMessage {
+      color: #EF4444;
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+    @media (max-width: 600px) {
+      body {
+        margin: 16px auto;
+        padding: 12px;
+      }
+      .form-container, #thankYouPage {
+        padding: 24px;
+      }
+      .form-group {
+        margin-bottom: 24px;
+      }
+      h1 {
+        font-size: 28px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+      label {
+        font-size: 14px;
+      }
+      input, select {
+        padding: 10px;
+        font-size: 14px;
+        height: 40px;
+        border-radius: 8px;
+      }
+      #name, #phone {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      .date-group {
+        gap: 8px;
+      }
+      .date-group select {
+        width: 100px;
+        height: 40px;
+      }
+      .date-group span {
+        font-size: 14px;
+      }
+      .gender-group {
+        gap: 16px;
+      }
+      .gender-group label {
+        font-size: 14px;
+        gap: 6px;
+      }
+      input[type="radio"] {
+        width: 18px;
+        height: 18px;
+      }
+      input[type="radio"]:checked::after {
+        width: 10px;
+        height: 10px;
+      }
+      .modal-content {
+        width: 95%;
+        padding: 24px;
+      }
+      .modal-content p, .modal-content ul li {
+        font-size: 14px;
+      }
+      .modal-content ul {
+        padding-left: 16px;
+      }
+      .modal-content ul li::before {
+        left: -16px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-width: 80px;
+        border-radius: 8px;
+      }
+      .calendar-container {
+        padding: 0 4px;
+      }
+      .calendar-table {
+        margin-top: 12px;
+      }
+      .calendar-table th, .calendar-table td {
+        padding: 8px;
+        font-size: 12px;
+        min-width: 40px;
+      }
+      .calendar-table th {
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .calendar-table .date {
+        font-size: 14px;
+      }
+      .calendar-table .time-slot span {
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+      .calendar-title {
+        font-size: 16px;
+      }
+      .intro-text p {
+        margin-bottom: 6px;
+      }
+      .intro-text .spacer {
+        height: 12px;
+      }
+      #classCountPrompt {
+        font-size: 12px;
+      }
+      #errorMessage {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container" id="formContainer">
+    <h1 class="text-3xl font-bold text-center text-gray-800">
+      2025年暑期跆拳道班<br>報名表格
+    </h1>
+    <div id="errorMessage"></div>
+    <div class="intro-text text-gray-600 text-lg">
+      <p class="spacer"></p>
+      <p class="spacer"></p>
+      <p>家長你好! 👋🏻</p>
+      <p>以下為2025年暑期班報名表格📝</p>
+      <p>請按照小朋友時間表，填寫以下資訊以完成報名程序</p>
+      <p class="spacer"></p>
+      <p>成功提交報名後，您將收到WhatsApp確認訊息，以及付款詳情💬</p>
+      <p class="spacer"></p>
+      <p><strong>早鳥優惠，立刻報名!🔥</strong></p>
+      <p>成功於6月22日或之前成功報名及完成付款，將可享有9折優惠!</p>
+      <p class="spacer"></p>
+      <p class="spacer"></p>
+    </div>
+
+    <form id="registrationForm" action="https://docs.google.com/forms/d/e/1FAIpQLScxNYEXWMkoCU7UffKYNPRXBWtfxk0w7H5cTApecn8MJcxdyg/formResponse" method="POST" class="space-y-8">
+      <!-- 學員資訊 -->
+      <div class="form-group">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">學員資訊</h2>
+        <div class="form-group">
+          <label for="name">學員中文姓名 *</label>
+          <input type="text" id="name" name="entry.520929458" required>
+          <span id="nameError" class="error">請輸入學員姓名</span>
+        </div>
+        <div class="form-group">
+          <label for="phone">聯絡電話（需接收WhatsApp訊息） *</label>
+          <input type="tel" id="phone" name="entry.1848250356" pattern="\+?\d{8,}" required>
+          <span id="phoneError" class="error">請輸入有效的電話號碼</span>
+        </div>
+        <div class="form-group">
+          <label for="birthYear">出生日期 *</label>
+          <div class="date-group">
+            <select id="birthYear" name="entry.68040101_year" required>
+              <option value="">年</option>
+            </select>
+            <span>/</span>
+            <select id="birthMonth" name="entry.68040101_month" required>
+              <option value="">月</option>
+            </select>
+            <span>/</span>
+            <select id="birthDay" name="entry.68040101_day" required>
+              <option value="">日</option>
+            </select>
+          </div>
+          <span id="birthdateError" class="error">請選擇有效的出生日期（不得晚於今日）</span>
+        </div>
+        <div class="form-group">
+          <label>性別 *</label>
+          <div class="gender-group">
+            <label><input type="radio" name="entry.1745029240" value="男" required> 男</label>
+            <label><input type="radio" name="entry.1745029240" value="女"> 女</label>
+          </div>
+          <span id="genderError" class="error">請選擇性別</span>
+        </div>
+      </div>
+
+      <!-- 課程選擇 -->
+      <div class="form-group">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">課程選擇</h2>
+        <div class="form-group">
+          <label>報名課堂（早鳥9折優惠） *</label>
+          <p class="text-gray-600 mt-2">7月至8月期間，只要報讀8堂或以上，即可有9折優惠，$180/堂(原價$200)</p>
+          <input type="hidden" id="totalClasses" name="entry.714236598">
+        </div>
+        <div class="form-group">
+          <label for="classType">所選班別 *</label>
+          <select id="classType" name="entry.750153756" required class="w-full" onchange="updateCalendar()">
+            <option value="" disabled selected>請選擇</option>
+          </select>
+          <span id="classTypeError" class="error">請選擇班別</span>
+        </div>
+      </div>
+
+      <!-- 課程時間選擇（表格日曆） -->
+      <div id="scheduleSection" class="form-group hidden">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">課程時間與日期</h2>
+        <p class="text-sm text-gray-600 mb-4">請在下方表格中點選日期及時段，報讀8堂或以上可享9折優惠。</p>
+        <div class="form-group">
+          <label>選擇日期與時段（在表格中點選） *</label>
+          <div class="calendar-container">
+            <div id="calendar"></div>
+          </div>
+          <p id="classCountPrompt"></p>
+          <span id="datesError" class="error">請選擇至少1個課程日期</span>
+        </div>
+        <input type="hidden" name="entry.363732204" id="selectedDates">
+      </div>
+
+      <!-- 按鈕 -->
+      <div class="flex justify-between gap-4">
+        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">下一步：確認資料</button>
+        <button type="button" onclick="resetForm()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-md hover:bg-gray-400">清除表單</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 確認頁面 -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-xl font-semibold mb-4">請確認您的報名資料</h2>
+      <p><strong>學員中文姓名：</strong> <span id="confirmName"></span></p>
+      <p><strong>聯絡電話：</strong> <span id="confirmPhone"></span></p>
+      <p><strong>出生日期：</strong> <span id="confirmBirthdate"></span></p>
+      <p><strong>性別：</strong> <span id="confirmGender"></span></p>
+      <p><strong>報名課堂：</strong> <span id="confirmTotalClasses"></span></p>
+      <p><strong>所選班別：</strong> <span id="confirmClassType"></span></p>
+      <p><strong>課程日期與時段：</strong></p>
+      <ul id="confirmDates"></ul>
+      <p id="discountWarning" class="error" style="display: none;"></p>
+      <div class="flex justify-between mt-6 gap-4">
+        <button class="cancel" onclick="cancelSubmission()">返回</button>
+        <button class="confirm" onclick="confirmSubmission()">提交</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 感謝頁面 -->
+  <div id="thankYouPage" class="hidden">
+    <h2 class="text-2xl font-bold text-center mb-4">您已成功提交報名表格! 📝</h2>
+    <p class="text-gray-600 mb-6">
+      稍後您將會收到WhatsApp確認訊息，以及付款詳情<br>
+      完成付款後，小朋友的報名將自動確認✅
+    </p>
+    <button class="return-button" onclick="restartForm()">重新報名</button>
+  </div>
+
+  <script>
+    // 動態載入課程時間數據
+    let schedules = {};
+    let previousSelectedDates = [];
+
+    const spreadsheetId = '1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU';
+    const sheetName = '舊生暑期時間表';
+    const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z&sheet=${encodeURIComponent(sheetName)}`;
+
+    async function loadScheduleFromSheet() {
+      try {
+        console.log('Fetching data from:', apiUrl);
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const text = await response.text();
+        console.log('Raw response:', text.substring(0, 200) + '...');
+
+        const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+        if (!jsonMatch || !jsonMatch[1]) {
+          throw new Error('Invalid JSONP response. Check if spreadsheet is publicly accessible.');
+        }
+
+        let data;
+        try {
+          data = JSON.parse(jsonMatch[1]);
+        } catch (parseError) {
+          throw new Error(`JSON parsing failed: ${parseError.message}`);
+        }
+
+        const newSchedules = {};
+        if (data.table && data.table.rows && data.table.rows.length > 0) {
+          data.table.rows.forEach((row, index) => {
+            const classType = row.c[0]?.v?.trim();
+            const timeSlot = row.c[1]?.v?.toString().trim();
+            const dates = row.c.slice(2)
+              .filter(cell => cell && cell.v && /^\d{4}-\d{2}-\d{2}$/.test(cell.v))
+              .map(cell => cell.v);
+
+            console.log(`Row ${index + 1}: classType=${classType}, timeSlot=${timeSlot}, dates=${JSON.stringify(dates)}`);
+
+            if (classType && timeSlot && dates.length > 0) {
+              if (!newSchedules[classType]) {
+                newSchedules[classType] = {};
+              }
+              const displayTime = timeSlot.match(/(\d{1,2}:\d{2}(?:am|pm))/i)?.[1] ||
+                                 timeSlot.match(/(\d{1,2}:\d{2})/)?.[1] ||
+                                 timeSlot;
+              newSchedules[classType][timeSlot] = { displayTime, dates, fullTimeSlot: timeSlot };
+            }
+          });
+
+          if (Object.keys(newSchedules).length === 0) {
+            throw new Error('No valid data parsed. Ensure columns A (class type), B (time slot), and C:Z (dates) contain valid data.');
+          }
+
+          schedules = newSchedules;
+          console.log('Parsed schedules:', JSON.stringify(schedules, null, 2));
+
+          updateClassTypeOptions();
+          updateCalendar();
+          document.getElementById('errorMessage').style.display = 'none';
+        } else {
+          throw new Error('No data found in the sheet. Verify sheet name "舊生暑期時間表" and data in columns A:Z.');
+        }
+      } catch (error) {
+        console.error('Load schedule error:', error);
+        let userMessage = '無法載入課程時間表，請稍後再試。';
+        if (error.message.includes('HTTP error')) {
+          userMessage = '無法連接到試算表，請檢查網路或試算表公開設定。';
+        } else if (error.message.includes('JSONP response')) {
+          userMessage = '試算表未公開，請在 Google 試算表設定為「任何人擁有連結即可查看」。';
+        } else if (error.message.includes('JSON parsing')) {
+          userMessage = '試算表數據格式錯誤，請聯繫管理員。';
+        } else if (error.message.includes('No data found') || error.message.includes('No valid data')) {
+          userMessage = '試算表無有效數據，請確認「舊生暑期時間表」包含班別（A）、時間段（B）和日期（C:Z）。';
+        }
+        showError(`${userMessage}（錯誤：${error.message}）`);
+      }
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    function updateClassTypeOptions() {
+      const classTypeSelect = document.getElementById('classType');
+      const defaultOption = classTypeSelect.querySelector('option[value=""]');
+      classTypeSelect.innerHTML = '';
+      classTypeSelect.appendChild(defaultOption);
+
+      Object.keys(schedules).forEach(classType => {
+        const option = document.createElement('option');
+        option.value = classType;
+        option.textContent = classType;
+        classTypeSelect.appendChild(option);
+      });
+    }
+
+    // Populate birthdate dropdowns
+    const yearSelect = document.getElementById('birthYear');
+    const monthSelect = document.getElementById('birthMonth');
+    const daySelect = document.getElementById('birthDay');
+    const currentYear = new Date().getFullYear();
+
+    for (let year = currentYear; year >= 1900; year--) {
+      let option = document.createElement('option');
+      option.value = year;
+      option.textContent = year;
+      yearSelect.appendChild(option);
+    }
+
+    for (let month = 1; month <= 12; month++) {
+      let option = document.createElement('option');
+      option.value = month;
+      option.textContent = month.toString().padStart(2, '0');
+      monthSelect.appendChild(option);
+    }
+
+    function isLeapYear(year) {
+      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    function updateDays() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      daySelect.innerHTML = '<option value="">日</option>';
+
+      if (year && month) {
+        let daysInMonth;
+        if (month === 2) {
+          daysInMonth = isLeapYear(year) ? 29 : 28;
+        } else {
+          daysInMonth = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+          let option = document.createElement('option');
+          option.value = day;
+          option.textContent = day.toString().padStart(2, '0');
+          daySelect.appendChild(option);
+        }
+      }
+    }
+
+    yearSelect.addEventListener('change', updateDays);
+    monthSelect.addEventListener('change', updateDays);
+    updateDays();
+
+    // Calendar initialization
+    function generateCalendarDates() {
+      const julyStart = new Date('2025-07-01');
+      const julyEnd = new Date('2025-07-31');
+      const augustStart = new Date('2025-08-01');
+      const augustEnd = new Date('2025-08-31');
+      const julyDates = [];
+      const augustDates = [];
+      let currentDate = new Date(julyStart);
+
+      while (currentDate <= julyEnd) {
+        julyDates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      currentDate = new Date(augustStart);
+      while (currentDate <= augustEnd) {
+        augustDates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      return { july: julyDates, august: augustDates };
+    }
+
+    function updateClassCountPrompt(selectedCount) {
+      const prompt = document.getElementById('classCountPrompt');
+      prompt.textContent = `已選：${selectedCount} 堂`;
+    }
+
+    function formatDateString(dateStr) {
+      const [year, month, day] = dateStr.split('-');
+      return `${year}年${month}月${day}日`;
+    }
+
+    function calculateTotalPrice(classCount) {
+      const pricePerClass = classCount >= 8 ? 180 : 200;
+      return classCount * pricePerClass;
+    }
+
+    function updateCalendar() {
+      const classType = document.getElementById('classType').value;
+      const calendarContainer = document.getElementById('calendar');
+      const scheduleSection = document.getElementById('scheduleSection');
+
+      console.log('Updating calendar for classType:', classType);
+
+      calendarContainer.innerHTML = '';
+
+      if (classType) {
+        scheduleSection.classList.remove('hidden');
+      } else {
+        scheduleSection.classList.add('hidden');
+        updateClassCountPrompt(0);
+        return;
+      }
+
+      const availableDates = classType && schedules[classType]
+        ? [...new Set(Object.values(schedules[classType]).flatMap(slot => slot.dates))]
+        : [];
+
+      console.log('Available dates:', availableDates);
+
+      if (availableDates.length === 0) {
+        console.warn('No available dates for selected class type');
+        calendarContainer.innerHTML = '<p class="text-gray-600">無可用課程日期</p>';
+        updateClassCountPrompt(0);
+        showError('無可用課程日期，請確認試算表數據。');
+        return;
+      }
+
+      previousSelectedDates = previousSelectedDates.filter(d =>
+        schedules[classType] && schedules[classType][d.timeSlot] &&
+        schedules[classType][d.timeSlot].dates.includes(d.date)
+      );
+
+      updateClassCountPrompt(previousSelectedDates.length);
+
+      const { july, august } = generateCalendarDates();
+
+      function createCalendarTable(dates, monthName, tableClass) {
+        const weeks = [];
+        let week = [];
+        dates.forEach((date, index) => {
+          if (date.getDay() === 1 || week.length === 0) {
+            if (week.length > 0) weeks.push(week);
+            week = [];
+          }
+          week.push(date);
+          if (index === dates.length - 1 && week.length > 0) weeks.push(week);
+        });
+
+        const title = document.createElement('div');
+        title.className = 'calendar-title';
+        title.textContent = `2025年${monthName}`;
+
+        const table = document.createElement('table');
+        table.className = `calendar-table ${tableClass}`;
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        ['一', '二', '三', '四', '五', '六', '日'].forEach((day, index) => {
+          const th = document.createElement('th');
+          th.textContent = day;
+          th.setAttribute('data-full-text', ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'][index]);
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        weeks.forEach(week => {
+          const tr = document.createElement('tr');
+          const weekDays = Array(7).fill(null);
+          week.forEach(date => {
+            weekDays[date.getDay() === 0 ? 6 : date.getDay() - 1] = date;
+          });
+
+          weekDays.forEach(day => {
+            const td = document.createElement('td');
+            if (day) {
+              const dateStr = `${day.getFullYear()}-${(day.getMonth() + 1).toString().padStart(2, '0')}-${day.getDate().toString().padStart(2, '0')}`;
+              const dateDiv = document.createElement('div');
+              dateDiv.className = 'date';
+              dateDiv.textContent = `${day.getMonth() + 1}/${day.getDate()}`;
+              td.appendChild(dateDiv);
+
+              if (availableDates.includes(dateStr)) {
+                const timeSlots = Object.entries(schedules[classType]).filter(([_, slot]) => slot.dates.includes(dateStr));
+                if (timeSlots.length > 0) {
+                  const slotDiv = document.createElement('div');
+                  slotDiv.className = 'time-slot';
+                  timeSlots.forEach(([timeSlot, slot]) => {
+                    const span = document.createElement('span');
+                    span.textContent = slot.displayTime;
+                    span.dataset.date = dateStr;
+                    span.dataset.timeSlot = timeSlot;
+                    span.classList.toggle('selected', previousSelectedDates.some(d => d.date === dateStr && d.timeSlot === timeSlot));
+                    span.addEventListener('click', () => {
+                      const isSelected = span.classList.contains('selected');
+                      if (isSelected) {
+                        previousSelectedDates = previousSelectedDates.filter(d => !(d.date === dateStr && d.timeSlot === timeSlot));
+                        span.classList.remove('selected');
+                      } else {
+                        previousSelectedDates.push({ date: dateStr, timeSlot });
+                        span.classList.add('selected');
+                      }
+                      previousSelectedDates.sort((a, b) => a.date.localeCompare(b.date));
+                      document.getElementById('selectedDates').value = previousSelectedDates
+                        .map(d => `${formatDateString(d.date)} ${d.timeSlot}`)
+                        .join(', ');
+                      updateClassCountPrompt(previousSelectedDates.length);
+                    });
+                    slotDiv.appendChild(span);
+                  });
+                  td.appendChild(slotDiv);
+                } else {
+                  td.className = 'disabled';
+                  td.innerHTML += '<div class="time-slot"><span style="background:none;cursor:default;color:#9CA3AF;">無可用時間</span></div>';
+                }
+              } else {
+                td.className = 'disabled';
+              }
+            } else {
+              td.className = 'disabled';
+            }
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        calendarContainer.appendChild(title);
+        calendarContainer.appendChild(table);
+      }
+
+      createCalendarTable(july, '7月', 'july');
+      createCalendarTable(august, '8月', 'august');
+    }
+
+    // Form validation and submission
+    const form = document.getElementById('registrationForm');
+    const nameInput = document.getElementById('name');
+    const phoneInput = document.getElementById('phone');
+    const classType = document.getElementById('classType');
+    const nameError = document.getElementById('nameError');
+    const phoneError = document.getElementById('phoneError');
+    const birthdateError = document.getElementById('birthdateError');
+    const genderError = document.getElementById('genderError');
+    const classTypeError = document.getElementById('classTypeError');
+    const datesError = document.getElementById('datesError');
+    const confirmModal = document.getElementById('confirmModal');
+    const formContainer = document.getElementById('formContainer');
+    const thankYouPage = document.getElementById('thankYouPage');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let isValid = true;
+
+      nameError.style.display = 'none';
+      phoneError.style.display = 'none';
+      birthdateError.style.display = 'none';
+      genderError.style.display = 'none';
+      classTypeError.style.display = 'none';
+      datesError.style.display = 'none';
+
+      if (!nameInput.value.trim()) {
+        nameError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (!phoneInput.value.match(/\+?\d{8,}/)) {
+        phoneError.style.display = 'block';
+        isValid = false;
+      }
+
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const day = parseInt(daySelect.value);
+      const selectedDate = new Date(year, month - 1, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (!year || !month || !day || isNaN(selectedDate) || selectedDate > today) {
+        birthdateError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (!form.querySelector('input[name="entry.1745029240"]:checked')) {
+        genderError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (!classType.value) {
+        classTypeError.style.display = 'block';
+        isValid = false;
+      }
+
+      const selectedDates = previousSelectedDates;
+      if (selectedDates.length === 0) {
+        datesError.style.display = 'block';
+        datesError.textContent = '請選擇至少1個課程日期';
+        isValid = false;
+      }
+
+      if (isValid) {
+        const classCount = selectedDates.length;
+        const totalPrice = calculateTotalPrice(classCount);
+        document.getElementById('totalClasses').value = `共 ${classCount} 堂，$${totalPrice}`;
+
+        document.getElementById('confirmName').textContent = nameInput.value;
+        document.getElementById('confirmPhone').textContent = phoneInput.value;
+        document.getElementById('confirmBirthdate').textContent = `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
+        document.getElementById('confirmGender').textContent = form.querySelector('input[name="entry.1745029240"]:checked').value;
+        document.getElementById('confirmTotalClasses').textContent = `共 ${classCount} 堂，$${totalPrice}`;
+        document.getElementById('confirmClassType').textContent = classType.value;
+        const confirmDatesList = document.getElementById('confirmDates');
+        confirmDatesList.innerHTML = selectedDates
+          .map(date => `<li>${formatDateString(date.date)} ${date.timeSlot}</li>`)
+          .join('');
+
+        const discountWarning = document.getElementById('discountWarning');
+        if (classCount < 8) {
+          discountWarning.textContent = '您選擇的課程少於8堂，無法享有9折優惠（$180/堂），將以原價$200/堂計算。';
+          discountWarning.style.display = 'block';
+        } else {
+          discountWarning.style.display = 'none';
+        }
+
+        confirmModal.style.display = 'flex';
+      }
+    });
+
+    function cancelSubmission() {
+      confirmModal.style.display = 'none';
+    }
+
+    async function confirmSubmission() {
+      confirmModal.style.display = 'none';
+      
+      const formData = new FormData(form);
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          mode: 'no-cors'
+        });
+        console.log('表單提交成功');
+        formContainer.style.display = 'none';
+        thankYouPage.style.display = 'block';
+      } catch (error) {
+        console.error('提交失敗:', error);
+        showError('表單提交失敗，請稍後再試。');
+      }
+      
+      resetForm();
+    }
+
+    function resetForm() {
+      form.reset();
+      document.getElementById('scheduleSection').classList.add('hidden');
+      document.getElementById('selectedDates').value = '';
+      document.getElementById('totalClasses').value = '';
+      previousSelectedDates = [];
+      document.getElementById('calendar').innerHTML = '';
+      document.getElementById('classCountPrompt').textContent = '';
+      nameError.style.display = 'none';
+      phoneError.style.display = 'none';
+      birthdateError.style.display = 'none';
+      genderError.style.display = 'none';
+      classTypeError.style.display = 'none';
+      datesError.style.display = 'none';
+      document.getElementById('errorMessage').style.display = 'none';
+      updateDays();
+      updateCalendar();
+    }
+
+    function restartForm() {
+      thankYouPage.style.display = 'none';
+      formContainer.style.display = 'block';
+      resetForm();
+    }
+
+    // 初始化
+    loadScheduleFromSheet();
+    setInterval(loadScheduleFromSheet, 60000);
+  </script>
+</body>
+</html>
