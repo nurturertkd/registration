@@ -97,7 +97,7 @@
     .modal-content ul li::before {
       content: '•';
       position: absolute;
-      left: -20px;
+      left: -14px;
       color: #3B82F6;
     }
     button {
@@ -364,7 +364,7 @@
       <p class="spacer"></p>
     </div>
 
-    <form id="registrationForm" action="https://docs.google.com/forms/d/e/1FAIpQLSe0kOPO9hkI1TmXDOGEMSonsd79Lu5Cenam3qqexGpKctca-Kw/formResponse" method="POST" class="space-y-8">
+    <form id="registrationForm" action="https://docs.google.com/forms/d/e/1FAIpQLSe0kOPO9hkI1TmXDOGEMSonsd79Lu5Cenam3qqexGpKctcaDw/formResponse" method="POST" class="space-y-8">
       <!-- 學員資訊 -->
       <div class="form-group">
         <h2 class="text-xl font-semibold mb-4 text-gray-800">學員資訊</h2>
@@ -796,22 +796,28 @@
       confirmModal.style.display = 'none';
 
       const formData = new FormData(form);
-      formData.set('entry.781986618', [...new Set(previousSelectedDates.map(d => d.classType))].join(', '));
+      formData.set('entry.781986668', [...new Set(previousSelectedDates.map(d => d.classType))].join(', '));
       formData.set('entry.1451557446', document.getElementById('totalClasses').value);
+
+      console.log('Submitting formData:', Object.fromEntries(formData));
 
       try {
         const response = await fetch(form.action, {
           method: 'POST',
-          body: formData,
-          mode: 'no-cors'
+          body: formData
         });
+        if (!response.ok) {
+          throw new Error(`Submission failed with status ${response.status}`);
+        }
         console.log('成功提交表單');
         formContainer.style.display = 'none';
         thankYouPage.style.display = 'block';
       } catch (error) {
         console.error('提交失敗:', error);
-        showError('表單提交失敗，請稍後再試。');
+        showError(`表單提交失敗，請檢查網路或表單設定。（錯誤：${error.message}）`);
       }
+
+      resetForm();
     }
 
     function resetForm() {
