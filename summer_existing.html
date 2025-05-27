@@ -494,26 +494,26 @@
         if (data.table && data.table.rows && data.table.rows.length > 0) {
           data.table.rows.forEach((row, index) => {
             const classType = row.c[0]?.v?.trim();
-            const timeSlot = row.c[1]?.v?.toString().trim();
-            const dates = row.c.slice(2)
+            let timeSlot = row.c[1]?.v?.toString().trim();
+            const hasAsterisk = row.c[2]?.v === '*';
+            const dates = row.c.slice(3)
               .filter(cell => cell && cell.v && /^\d{4}-\d{2}-\d{2}$/.test(cell.v))
               .map(cell => cell.v);
 
-            console.log(`Row ${index + 1}: classType=${classType}, timeSlot=${timeSlot}, dates=${JSON.stringify(dates)}`);
+            console.log(`Row ${index + 1}: classType=${classType}, timeSlot=${timeSlot}, hasAsterisk=${hasAsterisk}, dates=${JSON.stringify(dates)}`);
 
             if (classType && timeSlot && dates.length > 0) {
               if (!newSchedules[classType]) {
                 newSchedules[classType] = {};
               }
-              const displayTime = timeSlot.match(/(\d{1,2}:\d{2}(?:am|pm))/i)?.[1] ||
-                                 timeSlot.match(/(\d{1,2}:\d{2})/)?.[1] ||
-                                 timeSlot;
-              newSchedules[classType][timeSlot] = { displayTime, dates, fullTimeSlot: timeSlot };
+              const cleanTimeSlot = timeSlot.replace(/\*$/, '');
+              const displayTime = cleanTimeSlot.match(/(\d{1,2}:\d{2}(?:am|pm))/i)?.[1] || cleanTimeSlot;
+              newSchedules[classType][cleanTimeSlot] = { displayTime, dates, fullTimeSlot: cleanTimeSlot, hasAsterisk };
             }
           });
 
           if (Object.keys(newSchedules).length === 0) {
-            throw new Error('No valid data parsed. Ensure columns A (class type), B (time slot), and C:Z (dates) contain valid data.');
+            throw new Error('No valid data parsed. Ensure columns A (class type), B (time slot), C (asterisk), and D:Z (dates) contain valid data.');
           }
 
           schedules = newSchedules;
@@ -535,7 +535,7 @@
         } else if (error.message.includes('JSON parsing')) {
           userMessage = '試算表數據格式錯誤，請聯繫管理員。';
         } else if (error.message.includes('No data found') || error.message.includes('No valid data')) {
-          userMessage = '試算表無有效數據，請確認「舊生暑期時間表」包含班別（A）、時間段（B）和日期（C:Z）。';
+          userMessage = '試算表無有效數據，請確認「舊生暑期時間表」包含班別（A）、時間段（B）、星號（C）和日期（D:Z）。';
         }
         showError(`${userMessage}（錯誤：${error.message}）`);
         document.getElementById('calendar').innerHTML = '<p class="text-red-600">無法載入課程時間表，請稍後再試。</p>';
@@ -597,7 +597,9 @@
     function formatDateString(dateStr) {
       console.log('Formatting date:', dateStr);
       const [yearStr, monthStr, dayStr] = dateStr.split('-');
-      return `${yearStr}年${monthStr}.${dayStr}`;
+      const formatted = `${yearStr}年${monthStr}月${dayStr}日`;
+      console.log('Formatted date:', formatted);
+      return formatted;
     }
 
     function updateCalendar() {
@@ -689,7 +691,7 @@
                   slotDiv.className = 'time-slot';
                   timeSlots.forEach(([timeSlot, slot]) => {
                     const span = document.createElement('span');
-                    span.textContent = slot.displayTime;
+                    span.textContent = slot.hasAsterisk ? `${slot.displayTime}*` : slot.displayTime;
                     span.dataset.date = dateStr;
                     span.dataset.timeSlot = timeSlot;
                     span.classList.toggle('selected', previousSelectedDates.some(d =>
@@ -706,7 +708,11 @@
                       }
                       previousSelectedDates.sort((a, b) => a.date.localeCompare(b.date));
                       document.getElementById('selectedDates').value = previousSelectedDates
-                        .map(d => `${formatDateString(d.date)} ${d.timeSlot} (${d.classType})`)
+                        .map(d => {
+                          const dateObj = new Date(d.date);
+                          const dayOfWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][dateObj.getDay()];
+                          return `${formatDateString(d.date)} ${dayOfWeek} ${d.timeSlot} (${d.classType})`;
+                        })
                         .join(', ');
                       updateClassCountPrompt();
                     });
@@ -800,7 +806,11 @@
       document.getElementById('confirmClassType').textContent = [...new Set(selectedDates.map(d => d.classType))].join(', ');
       const confirmDatesList = document.getElementById('confirmDates');
       confirmDatesList.innerHTML = selectedDates
-        .map(date => `<li>${formatDateString(date.date)} ${date.timeSlot} (${date.classType})</li>`)
+        .map(date => {
+          const dateObj = new Date(date.date);
+          const dayOfWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][dateObj.getDay()];
+          return `<li>${formatDateString(date.date)} ${dayOfWeek} ${date.timeSlot} (${date.classType})</li>`;
+        })
         .join('');
 
       const discountWarning = document.getElementById('discountWarning');
