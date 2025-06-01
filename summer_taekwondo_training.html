@@ -60,30 +60,30 @@
         <div class="mt-4">
           <label class="block text-gray-700">出生日期 *</label>
           <div class="flex space-x-2 mt-1">
-<select id="birth-year" name="birth-year" class="w-1/3 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-  <option value="" disabled selected>年</option>
-  <option value="2020">2020</option>
-  <option value="2019">2019</option>
-  <option value="2018">2018</option>
-  <option value="2017">2017</option>
-  <option value="2016">2016</option>
-  <option value="2015">2015</option>
-  <option value="2014">2014</option>
-  <option value="2013">2013</option>
-  <option value="2012">2012</option>
-  <option value="2011">2011</option>
-  <option value="2010">2010</option>
-  <option value="2009">2009</option>
-  <option value="2008">2008</option>
-  <option value="2007">2007</option>
-  <option value="2006">2006</option>
-  <option value="2005">2005</option>
-  <option value="2004">2004</option>
-  <option value="2003">2003</option>
-  <option value="2002">2002</option>
-  <option value="2001">2001</option>
-  <option value="2000">2000</option>
-</select>
+            <select id="birth-year" name="birth-year" class="w-1/3 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+              <option value="" disabled selected>年</option>
+              <option value="2020">2020</option>
+              <option value="2019">2019</option>
+              <option value="2018">2018</option>
+              <option value="2017">2017</option>
+              <option value="2016">2016</option>
+              <option value="2015">2015</option>
+              <option value="2014">2014</option>
+              <option value="2013">2013</option>
+              <option value="2012">2012</option>
+              <option value="2011">2011</option>
+              <option value="2010">2010</option>
+              <option value="2009">2009</option>
+              <option value="2008">2008</option>
+              <option value="2007">2007</option>
+              <option value="2006">2006</option>
+              <option value="2005">2005</option>
+              <option value="2004">2004</option>
+              <option value="2003">2003</option>
+              <option value="2002">2002</option>
+              <option value="2001">2001</option>
+              <option value="2000">2000</option>
+            </select>
             <select id="birth-month" name="birth-month" class="w-1/3 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
               <option value="" disabled selected>月</option>
               <option value="01">1</option>
@@ -351,6 +351,25 @@
         </div>
       </div>
       
+      <!-- 同意條款 -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-700">同意條款 *</h3>
+        <div class="mt-4">
+          <p class="text-gray-600">請閱讀以下條款並勾選同意：</p>
+          <ol class="text-gray-600 ml-4 list-decimal">
+            <li class="mt-1">課程名額有限，若報名人數過多，教練將根據報名順序或學員水平進行篩選。</li>
+            <li class="mt-1">課程內容可能因學員水平作出調整。</li>
+            <li class="mt-1">若天文台懸掛八號或以上颱風或黑色暴雨訊號，當天課程將取消。紅雨或黃雨則課程照常進行。教練會WhatsApp通知進一步安排。</li>
+            <li class="mt-1">為安全起見，參加者必須遵守教練指示。違反守則者，教練保留權利要求其即時退出課程，所繳費用不予退還。參加者亦需確保自身健康狀況適合參與訓練班。</li>
+            <li class="mt-1">如有查詢，請聯繫歐其煬教練(WhatsApp 61504221)</li>
+          </ol>
+          <div class="mt-2 flex items-center">
+            <input type="checkbox" id="agree-terms" name="agree-terms" class="form-checkbox mr-2" required>
+            <label for="agree-terms" class="text-gray-700">我已閱讀並同意上述條款 *</label>
+          </div>
+        </div>
+      </div>
+      
       <!-- 按鈕 -->
       <div class="flex justify-between">
         <button onclick="resetForm()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">清除表單</button>
@@ -395,7 +414,7 @@
     // 定義課程日期對應
     const courseDates = {
       '搏擊A班 (23/7-25/7 三至五)': ['23/7', '24/7', '25/7'],
-      '品勢A班 (30/7-1/8 三至五)': ['30/7', '31/7', '1/8'],
+      '品勢A班 (30/7-1/8 三至五)': ['30/30', '31/31', '1/8'],
       '搏擊B班 (6/8-8/8 三至五)': ['6/8', '7/8', '8/8'],
       '品勢B班 (13/8-15/8 三至五)': ['13/8', '14/8', '15/8'],
       '考試&踢腳班 (20/8-22/8 三至五)': ['20/8', '21/8', '22/8']
@@ -417,9 +436,10 @@
       const phone = document.getElementById('contact-phone').value;
       const courses = Array.from(document.querySelectorAll('input[name="course"]:checked')).map(input => input.value);
       const singleSessions = Array.from(document.querySelectorAll('input[name="single-session"]:checked')).map(input => input.value);
+      const agreeTerms = document.getElementById('agree-terms').checked;
       
-      if (!name || !birthYear || !birthMonth || !birthDay || !beltLevel || !phone || (courses.length === 0 && singleSessions.length === 0)) {
-        alert('請填寫所有必填欄位並至少選擇一個課程（整班或單堂）！');
+      if (!name || !birthYear || !birthMonth || !birthDay || !beltLevel || !phone || (courses.length === 0 && singleSessions.length === 0) || !agreeTerms) {
+        alert('請填寫所有必填欄位，選擇至少一個課程，並同意條款！');
         return;
       }
       
@@ -520,7 +540,7 @@
         document.getElementById('thankyou-section').classList.remove('hidden');
       }).catch(error => {
         console.error('提交失敗:', error);
-        alert('提交表單時發生錯誤，請稍後再試！');
+        alert('提交表單時發生錯誤，請稍後重試！');
       });
     }
     
@@ -531,6 +551,7 @@
       document.getElementById('birth-day').value = '';
       document.getElementById('belt-level').value = '';
       document.getElementById('contact-phone').value = '';
+      document.getElementById('agree-terms').checked = false;
       document.querySelectorAll('input[name="course"]').forEach(input => input.checked = false);
       document.querySelectorAll('input[name="single-session"]').forEach(input => input.checked = false);
       document.getElementById('thankyou-section').classList.add('hidden');
