@@ -30,7 +30,7 @@
       <p class="text-gray-600 text-center mt-4">家長您好！👋</p>
       <p class="text-gray-600 text-center">歡迎參加2025年暑期跆拳道訓練班！📝</p>
       <p class="text-gray-600 text-center">讓學員有個充實的暑假！🔥</p>
-      <p class="text-gray-600 text-center mt-2">✨ 課程重點：</p>
+      <p class="text-gray-600 text-center mt-2">✨ 課程重點:</p>
       <ul class="text-gray-600 text-center list-none">
         <li class="ml-4"><strong>掌握跆拳道技巧</strong>：專業指導，提升技能，為未來比賽奠定堅實基礎！🥋</li>
         <li class="ml-4"><strong>全面身心發展</strong>：增強體魄、突破自我，塑造更強大的內心！💪</li>
@@ -245,10 +245,14 @@
       
       <!-- 單堂課程選擇 -->
       <div class="mb-6">
-        <h3 class="text-lg font-semibold text-gray-700">單堂課程選擇</h3>
-        <div class="mt-4">
+        <h3 class="text-lg font-semibold text-gray-700 cursor-pointer flex items-center" onclick="toggleSingleSession()">
+          單堂課程選擇
+          <span id="toggle-icon" class="ml-2">▼</span>
+        </h3>
+        <div id="single-session-section" class="mt-4 hidden">
           <p class="text-gray-600">報名單堂課程</p>
           <p class="text-gray-600 text-sm">（單堂$300，報讀1班後單堂$250，報讀2班或以上後單堂$220）</p>
+          <p class="text-gray-500 text-sm leading-tight mt-2">請至少選擇1個課程或1堂。</p>
           <table class="w-full mt-2 border-collapse">
             <thead>
               <tr class="bg-gray-200">
@@ -351,7 +355,6 @@
               </tr>
             </tbody>
           </table>
-          <p class="text-gray-500 text-sm leading-tight mt-2">請至少選擇1個課程或1堂。</p>
         </div>
       </div>
       
@@ -421,6 +424,13 @@
       '品勢B班 (13/8-15/8 三至五)': ['13/8', '14/8', '15/8'],
       '考試與踢腳班 (20/8-22/8 三至五)': ['20/8', '21/8', '22/8']
     };
+
+    function toggleSingleSession() {
+      const section = document.getElementById('single-session-section');
+      const icon = document.getElementById('toggle-icon');
+      section.classList.toggle('hidden');
+      icon.textContent = section.classList.contains('hidden') ? '▼' : '▲';
+    }
 
     function isValidDate(year, month, day) {
       const date = new Date(year, month - 1, day);
@@ -604,6 +614,10 @@
       document.querySelectorAll('input[name="single-session"]').forEach(input => input.checked = false);
       document.getElementById('thankyou-section').classList.add('hidden');
       document.getElementById('form-section').classList.remove('hidden');
+      const singleSessionSection = document.getElementById('single-session-section');
+      const icon = document.getElementById('toggle-icon');
+      singleSessionSection.classList.add('hidden');
+      icon.textContent = '▼';
       window.formData = null;
     }
   </script>
