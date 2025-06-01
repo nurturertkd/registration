@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
@@ -91,7 +52,6 @@
               <tr class="bg-gray-200">
                 <th class="p-2 text-left">日期</th>
                 <th class="p-2 text-left">項目</th>
-                <th class="p-2 text-left">特色描述</th>
                 <th class="p-2 text-left">費用</th>
                 <th class="p-2 text-center">選擇</th>
               </tr>
@@ -100,37 +60,47 @@
               <tr>
                 <td class="p-2 border-t">23/7-25/7 (三至五)</td>
                 <td class="p-2 border-t">搏擊A班</td>
-                <td class="p-2 border-t">學習基本防身技巧，增強自信</td>
                 <td class="p-2 border-t">$750</td>
                 <td class="p-2 border-t text-center"><input type="checkbox" class="form-checkbox" name="course" value="搏擊A班 (23/7-25/7)"></td>
               </tr>
               <tr>
+                <td class="p-2 border-t" colspan="4"><p class="text-gray-600 text-sm">特色描述：學習基本防身技巧，增強自信</p></td>
+              </tr>
+              <tr>
                 <td class="p-2 border-t">30/7-1/8 (三至五)</td>
                 <td class="p-2 border-t">品勢A班</td>
-                <td class="p-2 border-t">練習形式，培養專注力與紀律</td>
                 <td class="p-2 border-t">$750</td>
                 <td class="p-2 border-t text-center"><input type="checkbox" class="form-checkbox" name="course" value="品勢A班 (30/7-1/8)"></td>
               </tr>
               <tr>
+                <td class="p-2 border-t" colspan="4"><p class="text-gray-600 text-sm">特色描述：練習形式，培養專注力與紀律</p></td>
+              </tr>
+              <tr>
                 <td class="p-2 border-t">6/8-8/8 (三至五)</td>
                 <td class="p-2 border-t">搏擊B班</td>
-                <td class="p-2 border-t">進階技巧，提高協調性與反應力</td>
                 <td class="p-2 border-t">$750</td>
                 <td class="p-2 border-t text-center"><input type="checkbox" class="form-checkbox" name="course" value="搏擊B班 (6/8-8/8)"></td>
               </tr>
               <tr>
+                <td class="p-2 border-t" colspan="4"><p class="text-gray-600 text-sm">特色描述：進階技巧，提高協調性與反應力</p></td>
+              </tr>
+              <tr>
                 <td class="p-2 border-t">13/8-15/8 (三至五)</td>
                 <td class="p-2 border-t">品勢B班</td>
-                <td class="p-2 border-t">深化形式，增強記憶力與表現力</td>
                 <td class="p-2 border-t">$750</td>
                 <td class="p-2 border-t text-center"><input type="checkbox" class="form-checkbox" name="course" value="品勢B班 (13/8-15/8)"></td>
               </tr>
               <tr>
+                <td class="p-2 border-t" colspan="4"><p class="text-gray-600 text-sm">特色描述：深化形式，增強記憶力與表現力</p></td>
+              </tr>
+              <tr>
                 <td class="p-2 border-t">20/8-22/8 (三至五)</td>
                 <td class="p-2 border-t">考試&踢腳班</td>
-                <td class="p-2 border-t">展示成果，獲得證書，慶祝成就</td>
                 <td class="p-2 border-t">$750</td>
                 <td class="p-2 border-t text-center"><input type="checkbox" class="form-checkbox" name="course" value="考試&踢腳班 (20/8-22/8)"></td>
+              </tr>
+              <tr>
+                <td class="p-2 border-t" colspan="4"><p class="text-gray-600 text-sm">特色描述：展示成果，獲得證書，慶祝成就</p></td>
               </tr>
             </tbody>
           </table>
