@@ -363,12 +363,11 @@
         <h3 class="text-lg font-semibold text-gray-700">同意條款</h3>
         <div class="mt-4">
           <p class="text-gray-600">請閱讀以下條款並同意：</p>
-          <ol class="text-gray-600 ml-4 list-decimal">
+          <ol class="list-decimal text-gray-600 ml-4">
             <li class="mt-2">課程名額有限，若報名人數過多，教練將根據報名或學員水平進行篩選。</li>
             <li class="mt-2">課程內容可能因學員水平作出調整。</li>
-            <li class="mt-2">若天文台懸掛八號或以上颱風或黑色暴雨警告，當天課程將取消。紅雨或黃雨則課程照常進行。教練會透過WhatsApp 通知進一步安排。</li>
-            <li class="mt-2">為確保安全，參加者必須遵守教練指示。違反守則者，教練保留權利要求其即時退出課程，所繳費用不予退還。參加者亦需確認自身健康狀況適合參與。</li>
-            <li class="mt-2">如有查詢，請聯繫歐其煬教練（WhatsApp 61504221）。</li>
+            <li class="mt-2">若天文台懸掛八號或以上颱風或黑色暴雨警告，當天課程將取消。紅雨或黃雨則課程照常進行。教練會透過WhatsApp通知進一步安排。</li>
+            <li class="mt-2">為確保安全，參加者必須遵守教練指示。違反守則者，教練保留權利要求其立即退出課程，所繳費用不予退還。參加者亦需確認自身健康狀況適合參與。</li>
           </ol>
           <div class="mt-2 flex items-center">
             <input type="checkbox" id="agree-terms" name="agree-terms" class="form-checkbox mr-2" required>
@@ -378,39 +377,44 @@
       </div>
       
       <!-- 按鈕 -->
-      <div class="flex justify-between">
-        <button onclick="clearForm()" class="btn bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700">清除表單</button>
-        <button onclick="displayConfirm()" class="btn bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">下一步</button>
+      <div class="flex justify-between items-center">
+        <button onclick="clearForm()" class="btn bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700">清除表單</button>
+        <button onclick="displayConfirm()" class="btn bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">下一步</button>
+      </div>
+      
+      <!-- 聯繫資訊 -->
+      <div class="text-center mt-4">
+        <p class="text-gray-600">如有查詢，請聯繫歐其揚教練 WhatsApp <a href="https://wa.me/85261504221?text=你好！想查詢觀塘暑期訓練班！" target="_blank" class="text-blue-600 hover:underline">61504221</a>。</p>
       </div>
     </div>
     
     <!-- 確認資料頁面 -->
-    <div id="confirm-section" class="bg-white p-6 rounded-lg shadow-md mt-6 hidden">
-      <h2 class="text-xl font-semibold text-center text-gray-700">請確認您的報名資料</h2>
+    <div id="confirm-section" class="bg-white p-6 rounded-lg shadow-md mt-10 hidden">
+      <h2 class="text-lg font-semibold text-center text-gray-700">請確認您的報名資料</h2>
       <div class="text-gray-600 space-y-2 mt-4">
         <p><strong>學員中文姓名：</strong><span id="confirm-name"></span></p>
         <p><strong>出生日期：</strong><span id="confirm-date"></span></p>
         <p><strong>現有級別：</strong><span id="confirm-belt"></span></p>
         <p><strong>聯絡電話：</strong><span id="confirm-phone"></span></p>
         <p><strong>報名課程：</strong></p>
-        <ol id="confirm-classes" class="list-decimal text-gray-600 ml-8"></ol>
+        <ul id="confirm-classes" class="list-disc text-gray-600 ml-6"></ul>
         <p><strong>總費用：</strong><span id="confirm-total" class="font-bold"></span></p>
         <p class="text-sm"><strong>費用計算：</strong><span id="confirm-formula" class="font-bold"></span></p>
       </div>
-      <div class="flex justify-between mt-6">
-        <button onclick="returnToForm()" class="btn bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">返回</button>
-        <button onclick="submitForm()" class="btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">提交</button>
+      <div class="flex justify-between mt-4">
+        <button onclick="returnToForm()" class="btn bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">返回</button>
+        <button onclick="submitForm()" class="btn bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">提交</button>
       </div>
     </div>
     
-    <!-- 提交成功頁面 -->
-    <div id="thankyou-section" class="bg-white p-6 rounded-lg shadow-md mt-6 hidden">
-      <h2 class="text-xl font-semibold text-center text-gray-700">報名成功提交！</h2>
+    <!-- 提交成功 -->
+    <div id="thankyou-section" class="bg-white p-4 rounded-md shadow-md mt-4 hidden">
+      <h2 class="text-lg font-semibold text-center text-gray-700">報名成功提交！</h2>
       <p class="text-center text-4xl mt-4 success-icon">✅</p>
       <p class="text-gray-600 text-center mt-4">您將透過WhatsApp收到確認訊息及付款詳情。</p>
       <p class="text-gray-600 text-center">完成付款後，報名將正式確認！</p>
       <div class="text-center mt-4">
-        <button onclick="clearForm()" class="btn bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">重新報名</button>
+        <button onclick="clearForm()" class="btn bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">重新報名</button>
       </div>
     </div>
   </div>
@@ -434,7 +438,7 @@
 
     function isValidDate(year, month, day) {
       const date = new Date(year, month - 1, day);
-      return date.getFullYear() == year && date.getMonth() + 1 == month && date.getDate() == day;
+      return date.getFullYear() === parseInt(year) && date.getMonth() + 1 === parseInt(month) && date.getDate() === parseInt(day);
     }
 
     function displayConfirm() {
@@ -449,9 +453,9 @@
       const birthDay = birthDayInput.value;
       const beltLevel = document.getElementById('belt-level').value;
       const phoneInput = document.getElementById('contact-phone');
-      const phone = phoneInput.value;
+      const phone = phoneInput.value.trim();
       const courses = Array.from(document.querySelectorAll('input[name="course"]:checked')).map(input => input.value);
-      const singleSessions = Array.from(document.querySelectorAll('input[name="single-session"]:checked')).map(input => input.value);
+      const singleSessions = Array.from(document.querySelectorAll('input[name="single-session"]:checked')).map(s => s.value);
       const agreeTerms = document.getElementById('agree-terms').checked;
 
       // 重置錯誤狀態
@@ -464,7 +468,7 @@
       phoneInput.classList.remove('error');
       document.getElementById('phone-error').classList.add('hidden');
 
-      // 驗證姓名（僅檢查非空）
+      // 驗證姓名
       if (!name) {
         nameInput.classList.add('error');
         document.getElementById('name-error').classList.remove('hidden');
@@ -480,7 +484,7 @@
         return;
       }
 
-      // 驗證電話（8位數字）
+      // 驗證電話
       const phoneRegex = /^[0-9]{8}$/;
       if (!phoneRegex.test(phone)) {
         phoneInput.classList.add('error');
@@ -498,9 +502,10 @@
       for (const course of courses) {
         const courseDays = courseDates[course];
         for (const session of singleSessions) {
-          const sessionDay = session.match(/\((\d+\/\d+)[^\)]+\)/)[1];
-          if (courseDays.includes(sessionDay)) {
-            alert(`錯誤：單堂課程 ${session} 與整班課程 ${course} 日期重疊！`);
+          const sessionDayMatch = session.match(/\((\d+\/\d+)\s/);
+          const sessionDay = sessionDayMatch ? sessionDayMatch[1] : null;
+          if (sessionDay && courseDays.includes(sessionDay)) {
+            alert(`錯誤：單堂課程 ${session} 與整班課程 ${course} 的日期重疊！`);
             return;
           }
         }
@@ -540,7 +545,7 @@
       document.getElementById('confirm-phone').textContent = phone;
       const classesList = document.getElementById('confirm-classes');
       const allSelections = [...courses, ...singleSessions];
-      classesList.innerHTML = allSelections.map((selection, index) => `<li>${index + 1}. ${selection}</li>`).join('');
+      classesList.innerHTML = allSelections.map(selection => `<li>${selection}</li>`).join('');
       document.getElementById('confirm-total').textContent = `$${totalCost}`;
       document.getElementById('confirm-formula').textContent = formulaText;
 
@@ -580,7 +585,7 @@
       formData.append('entry.441270855', [...courses, ...singleSessions].join(', '));
       formData.append('entry.739006543', `$${totalCost}`);
 
-      // 提交到 Google Form（請替換為實際 Google Form URL）
+      // 提交到 Google Form（請將URL替換為實際的 Google Form 網址）
       fetch('https://docs.google.com/forms/d/e/[YOUR_FORM_ID]/formResponse', {
         method: 'POST',
         body: formData,
