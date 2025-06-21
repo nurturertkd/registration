@@ -1,4 +1,43 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
@@ -305,6 +344,51 @@
     h1 {
       line-height: 1.4;
     }
+    /* Image styles */
+    .timetable-image-container {
+      margin: 16px 0;
+      text-align: center;
+    }
+    .timetable-image {
+      max-width: 100%;
+      height: auto;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      pointer-events: auto;
+    }
+    .image-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+    }
+    .image-modal-content {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+    .image-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 30px;
+      font-weight: bold;
+      cursor: pointer;
+    }
     @media (max-width: 600px) {
       body {
         margin: 16px auto;
@@ -416,6 +500,18 @@
       #classCountPrompt {
         font-size: 12px;
       }
+      .timetable-image {
+        width: 100%;
+      }
+      .image-modal-content {
+        max-width: 95%;
+        max-height: 95%;
+      }
+      .image-modal-close {
+        font-size: 24px;
+        top: 10px;
+        right: 10px;
+      }
     }
   </style>
 </head>
@@ -424,6 +520,9 @@
     <h1 class="text-3xl font-bold text-center text-gray-800">
       2025年暑期跆拳道班<br>報名表格
     </h1>
+    <div class="timetable-image-container">
+      <img src="2025summer_time_table.JPG" alt="2025 Summer Timetable" class="timetable-image" onclick="openImageModal()">
+    </div>
     <div class="intro-text text-gray-600 text-lg">
       <p class="spacer"></p>
       <p class="spacer"></p>
@@ -569,6 +668,12 @@
     </div>
   </div>
 
+  <!-- 圖片放大模態框 -->
+  <div id="imageModal" class="image-modal">
+    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+    <img src="2025summer_time_table.JPG" alt="2025 Summer Timetable Enlarged" class="image-modal-content">
+  </div>
+
   <!-- 感謝頁面 -->
   <div id="thankYouPage" class="hidden">
     <h2 class="text-2xl font-bold text-center mb-4">您已成功提交報名表格! 📝</h2>
@@ -656,6 +761,22 @@
       document.getElementById('courseOption').value = card.dataset.value;
       updateCalendar();
     }
+
+    // Image modal functions
+    function openImageModal() {
+      document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // Prevent right-click on images
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.classList.contains('timetable-image') || e.target.classList.contains('image-modal-content')) {
+        e.preventDefault();
+      }
+    });
 
     // Calendar initialization
     let previousSelectedDates = []; // Store { date, timeSlot } objects
