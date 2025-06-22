@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
@@ -183,41 +144,43 @@
     }
     .modal-content {
       background-color: white;
-      padding: 32px;
+      padding: 24px;
       border-radius: 12px;
       width: 90%;
-      max-width: 600px;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     }
+    .modal-content h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
     .modal-content p {
-      font-size: 16px;
-      margin: 12px 0;
+      font-size: 14px;
+      margin: 8px 0;
+      line-height: 1.4;
     }
     .modal-content ul {
-      padding-left: 20px;
-      margin: 12px 0;
+      padding-left: 16px;
+      margin: 8px 0;
+      max-height: 150px;
+      overflow-y: auto;
     }
     .modal-content ul li {
-      font-size: 16px;
-      line-height: 1.8;
-      list-style: none;
-      position: relative;
-    }
-    .modal-content ul li::before {
-      content: '•';
-      position: absolute;
-      left: -20px;
-      color: #3B82F6;
+      font-size: 14px;
+      line-height: 1.5;
+      list-style: disc;
     }
     button {
-      padding: 12px 24px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 500;
       transition: all 0.3s ease;
-      min-width: 100px;
+      min-width: 80px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     button[type="submit"], button.confirm, button.return-button {
@@ -344,7 +307,6 @@
     h1 {
       line-height: 1.4;
     }
-    /* Image styles */
     .timetable-image-container {
       margin: 16px 0;
       text-align: center;
@@ -449,22 +411,29 @@
       }
       .modal-content {
         width: 95%;
-        padding: 24px;
+        padding: 16px;
+        max-height: 70vh;
+      }
+      .modal-content h2 {
+        font-size: 16px;
+        margin-bottom: 8px;
       }
       .modal-content p, .modal-content ul li {
-        font-size: 14px;
+        font-size: 12px;
+        line-height: 1.3;
       }
       .modal-content ul {
-        padding-left: 16px;
+        padding-left: 12px;
+        max-height: 120px;
       }
-      .modal-content ul li::before {
-        left: -16px;
+      .modal-content ul li {
+        margin-bottom: 4px;
       }
       button {
-        padding: 10px 20px;
-        font-size: 14px;
-        min-width: 80px;
-        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 12px;
+        min-width: 70px;
+        border-radius: 6px;
       }
       .calendar-container {
         padding: 0 4px;
@@ -650,27 +619,27 @@
   </div>
 
   <!-- 確認頁面 -->
-  <div id="confirmModal" class="modal">
-    <div class="modal-content">
-      <h2 class="text-xl font-semibold mb-4">請確認您的報名資料</h2>
-      <p><strong>學員中文姓名：</strong> <span id="confirmName"></span></p>
-      <p><strong>聯絡電話：</strong> <span id="confirmPhone"></span></p>
-      <p><strong>出生日期：</strong> <span id="confirmBirthdate"></span></p>
-      <p><strong>性別：</strong> <span id="confirmGender"></span></p>
-      <p><strong>報名課堂：</strong> <span id="confirmCourse"></span></p>
-      <p><strong>所選班別：</strong> <span id="confirmClassType"></span></p>
-      <p><strong>課程日期與時段：</strong></p>
-      <ul id="confirmDates"></ul>
-      <div class="flex justify-between mt-6 gap-4">
-        <button class="cancel" onclick="cancelSubmission()">返回</button>
-        <button class="confirm" onclick="confirmSubmission()">提交</button>
-      </div>
+<div id="confirmModal" class="modal">
+  <div class="modal-content">
+    <h2 class="text-xl font-semibold mb-4">請確認您的報名資料</h2>
+    <p><strong>學員中文姓名：</strong> <span id="confirmName"></span></p>
+    <p><strong>聯絡電話：</strong> <span id="confirmPhone"></span></p>
+    <p><strong>出生日期：</strong> <span id="confirmBirthdate"></span></p>
+    <p><strong>性別：</strong> <span id="confirmGender"></span></p>
+    <p><strong>報名課堂：</strong> <span id="confirmCourse"></span></p>
+    <p><strong>所選班別：</strong> <span id="confirmClassType"></span></p>
+    <p><strong>課程日期與時段：</strong></p>
+    <ul id="confirmDates"></ul>
+    <div class="flex justify-between mt-6 gap-4">
+      <button class="cancel" onclick="cancelSubmission()">返回</button>
+      <button class="confirm" onclick="confirmSubmission()">提交</button>
     </div>
   </div>
+</div>
 
   <!-- 圖片放大模態框 -->
   <div id="imageModal" class="image-modal">
-    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+    <span class="image-modal-close" onclick="closeImageModal()">×</span>
     <img src="2025summer_time_table.JPG" alt="2025 Summer Timetable Enlarged" class="image-modal-content">
   </div>
 
@@ -684,7 +653,38 @@
     <button class="return-button" onclick="restartForm()">重新報名</button>
   </div>
 
-  <script>
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+
     // 課程日期與時段數據
     const schedules = {
       '3歲至5歲': {
@@ -779,7 +779,7 @@
     });
 
     // Calendar initialization
-    let previousSelectedDates = []; // Store { date, timeSlot } objects
+    let previousSelectedDates = [];
 
     function generateCalendarDates() {
       const julyStart = new Date('2025-07-01');
@@ -823,10 +823,8 @@
       console.log('Updating calendar for classType:', classType);
       console.log('Course option:', courseOption, 'Required classes:', requiredClasses);
 
-      // 清空日曆容器
       calendarContainer.innerHTML = '';
 
-      // 如果有選擇班別，顯示課程時間與日期區塊
       if (classType) {
         console.log('Showing schedule section');
         scheduleSection.classList.remove('hidden');
@@ -837,7 +835,6 @@
         return;
       }
 
-      // 獲取可用日期
       const availableDates = classType && schedules[classType]
         ? [...new Set(Object.values(schedules[classType]).flatMap(slot => slot.dates))]
         : [];
@@ -851,13 +848,10 @@
         return;
       }
 
-      // 更新課堂數量提示
       updateClassCountPrompt(previousSelectedDates.length, requiredClasses);
 
-      // 生成 7 月和 8 月日曆
       const { july, august } = generateCalendarDates();
 
-      // 生成表格的共用函數
       function createCalendarTable(dates, monthName, tableClass) {
         const weeks = [];
         let week = [];
@@ -1096,7 +1090,6 @@
       resetForm();
     }
 
-    // 初始化日曆
     updateCalendar();
   </script>
 </body>
