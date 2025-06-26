@@ -336,7 +336,7 @@
     async function submitForm() {
       const { name, status } = window.formData;
       const formMessage = document.getElementById('formMessage');
-      const webAppUrl = 'https://script.google.com/macros/s/AKfycbwQcg4vn2vWi8zqg5Xbma7qdkr-WV9oePbqsiDbZ3d-4O7o2TxjV_rDgdpnukqJU3n4/exec';
+      const webAppUrl = 'https://script.google.com/macros/s/AKfycbwf4mw5Mg-nNTzIufoYjrQ_b1PzIqdA41FZJY1nIUH0vqOvVRBq1cgpdnQCAx1iNdPk/exec';
       try {
         console.log('Sending data:', JSON.stringify({ name, status }));
         const response = await fetch(webAppUrl, {
