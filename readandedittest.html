@@ -1,0 +1,372 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Sheet Data Form</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .form-container {
+      background: white;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 16px;
+      color: #333;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #B0BEC5;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 16px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    input:focus, select:focus, button:focus {
+      outline: none;
+      border-color: #1976D2;
+      box-shadow: 0 0 6px rgba(25, 118, 210, 0.3);
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #45a049;
+      transform: translateY(-2px);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: 500;
+    }
+    .name-cell {
+      cursor: pointer;
+      color: #1976D2;
+      text-decoration: underline;
+    }
+    .name-cell:hover {
+      background-color: #e3f2fd;
+    }
+    .error {
+      color: #D32F2F;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+    .loading {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #333;
+    }
+    .form-section, .confirm-section, .thankyou-section {
+      display: block;
+    }
+    .hidden {
+      display: none;
+    }
+    .success-icon {
+      font-size: 2rem;
+      margin: 1rem 0;
+    }
+    @media (max-width: 600px) {
+      .form-container {
+        padding: 24px;
+      }
+      input, select, button {
+        padding: 10px;
+        font-size: 14px;
+      }
+      table {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Form Section -->
+  <div id="form-section" class="form-container form-section">
+    <h2>Google Sheet 資料表單</h2>
+    
+    <!-- Submit Form -->
+    <div class="form-group">
+      <h3>提交資料</h3>
+      <form id="dataForm">
+        <div class="form-group">
+          <label for="name">姓名</label>
+          <input type="text" id="name" name="name" required>
+          <span id="nameError" class="error" style="display: none;">請輸入姓名</span>
+        </div>
+        <div class="form-group">
+          <label for="status">狀態</label>
+          <select id="status" name="status" required>
+            <option value="" disabled selected>請選擇狀態</option>
+            <option value="上線">上線</option>
+            <option value="下線">下線</option>
+          </select>
+          <span id="statusError" class="error" style="display: none;">請選擇狀態</span>
+        </div>
+        <button type="submit">下一步</button>
+      </form>
+      <div id="formMessage" class="error" style="margin-top: 10px;"></div>
+    </div>
+    
+    <!-- Display Data -->
+    <div id="loading" class="loading">Loading data...</div>
+    <div id="error" class="error" style="display: none;">Unable to load data. Please check if the spreadsheet is public.</div>
+    <table id="dataTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>姓名</th>
+          <th>狀態</th>
+        </tr>
+      </thead>
+      <tbody id="dataBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Confirm Section -->
+  <div id="confirm-section" class="form-container confirm-section hidden">
+    <h2>確認資料</h2>
+    <p><strong>姓名：</strong><span id="confirm-name"></span></p>
+    <p><strong>狀態：</strong><span id="confirm-status"></span></p>
+    <div class="flex justify-between mt-4">
+      <button onclick="returnToForm()">返回</button>
+      <button onclick="submitForm()">確認提交</button>
+    </div>
+  </div>
+
+  <!-- Thank You Section -->
+  <div id="thankyou-section" class="form-container thankyou-section hidden">
+    <h2>提交成功！</h2>
+    <p class="success-icon">✅</p>
+    <p>您的資料已成功提交！</p>
+    <button onclick="clearForm()">重新提交</button>
+  </div>
+
+  <script>
+    // Load data from Google Sheet dynamically
+    async function loadDataFromSheet() {
+      const spreadsheetId = '1m4vSkev2tAQV4R2QBpoMVNKKPAWwAbh-Qe14Dmp78H0';
+      const sheetId = '0'; // Sheet1 gid
+      const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&gid=${sheetId}&range=B2:C`;
+
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const table = document.getElementById('dataTable');
+      const dataBody = document.getElementById('dataBody');
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+        const text = await response.text();
+        // Parse Google Sheets JSON response
+        const jsonString = text.substring(47, text.length - 2); // Remove prefix and suffix
+        const data = JSON.parse(jsonString);
+        const rows = data.table.rows;
+
+        dataBody.innerHTML = ''; // Clear table
+        const sheetData = [];
+
+        // Extract B column (name) and C column (status)
+        rows.forEach(row => {
+          const name = row.c[0]?.v || ''; // B column: name
+          const status = row.c[1]?.v || ''; // C column: status
+          sheetData.push({ name, status });
+        });
+
+        if (sheetData.length === 0) {
+          error.textContent = 'No data to display';
+          error.style.display = 'block';
+          table.style.display = 'none';
+        } else {
+          sheetData.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td class="name-cell" onclick="fillName('${row.name}')">${row.name}</td>
+              <td>${row.status}</td>
+            `;
+            dataBody.appendChild(tr);
+          });
+          table.style.display = 'table';
+          error.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Failed to load data:', err);
+        error.textContent = 'Unable to load data. Please check if the spreadsheet is public or network connection.';
+        error.style.display = 'block';
+        table.style.display = 'none';
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    // Fill name input when clicking a name in the table
+    function fillName(name) {
+      document.getElementById('name').value = name;
+      document.getElementById('nameError').style.display = 'none';
+      document.getElementById('formMessage').textContent = '';
+      // Switch to form section if not already visible
+      document.getElementById('confirm-section').classList.add('hidden');
+      document.getElementById('thankyou-section').classList.add('hidden');
+      document.getElementById('form-section').classList.remove('hidden');
+      // Reset status to default
+      document.getElementById('status').value = '';
+    }
+
+    // Load data on page load
+    window.addEventListener('load', loadDataFromSheet);
+
+    // Handle form submission
+    document.getElementById('dataForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const status = document.getElementById('status').value.trim();
+      const nameError = document.getElementById('nameError');
+      const statusError = document.getElementById('statusError');
+      const formMessage = document.getElementById('formMessage');
+
+      // Reset error messages
+      nameError.style.display = 'none';
+      statusError.style.display = 'none';
+      formMessage.textContent = '';
+
+      // Validate input
+      let isValid = true;
+      if (!name) {
+        nameError.style.display = 'block';
+        isValid = false;
+      }
+      if (!status) {
+        statusError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (!isValid) {
+        formMessage.textContent = '請填寫所有欄位';
+        formMessage.style.color = 'red';
+        return;
+      }
+
+      // Show confirmation
+      document.getElementById('confirm-name').textContent = name;
+      document.getElementById('confirm-status').textContent = status;
+      document.getElementById('form-section').classList.add('hidden');
+      document.getElementById('confirm-section').classList.remove('hidden');
+      window.formData = { name, status };
+    });
+
+    function returnToForm() {
+      document.getElementById('confirm-section').classList.add('hidden');
+      document.getElementById('form-section').classList.remove('hidden');
+    }
+
+    async function submitForm() {
+      const { name, status } = window.formData;
+      const formMessage = document.getElementById('formMessage');
+      const webAppUrl = 'https://script.google.com/macros/s/AKfycbwQcg4vn2vWi8zqg5Xbma7qdkr-WV9oePbqsiDbZ3d-4O7o2TxjV_rDgdpnukqJU3n4/exec';
+      try {
+        console.log('Sending data:', JSON.stringify({ name, status }));
+        const response = await fetch(webAppUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, status })
+        });
+        console.log('Submission response type:', response.type);
+        document.getElementById('confirm-section').classList.add('hidden');
+        document.getElementById('thankyou-section').classList.remove('hidden');
+        await loadDataFromSheet();
+      } catch (error) {
+        console.error('Submission failed:', error);
+        document.getElementById('confirm-section').classList.add('hidden');
+        document.getElementById('form-section').classList.remove('hidden');
+        formMessage.textContent = '提交失敗: ' + error.message;
+        formMessage.style.color = 'red';
+      }
+    }
+
+    function clearForm() {
+      document.getElementById('dataForm').reset();
+      document.getElementById('nameError').style.display = 'none';
+      document.getElementById('statusError').style.display = 'none';
+      document.getElementById('formMessage').textContent = '';
+      document.getElementById('thankyou-section').classList.add('hidden');
+      document.getElementById('confirm-section').classList.add('hidden');
+      document.getElementById('form-section').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
