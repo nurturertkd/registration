@@ -144,43 +144,41 @@
     }
     .modal-content {
       background-color: white;
-      padding: 24px;
+      padding: 32px;
       border-radius: 12px;
       width: 90%;
-      max-width: 500px;
-      max-height: 80vh;
-      overflow-y: auto;
+      max-width: 600px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     }
-    .modal-content h2 {
-      font-size: 18px;
-      margin-bottom: 12px;
-    }
     .modal-content p {
-      font-size: 14px;
-      margin: 8px 0;
-      line-height: 1.4;
+      font-size: 16px;
+      margin: 12px 0;
     }
     .modal-content ul {
-      padding-left: 16px;
-      margin: 8px 0;
-      max-height: 150px;
-      overflow-y: auto;
+      padding-left: 20px;
+      margin: 12px 0;
     }
     .modal-content ul li {
-      font-size: 14px;
-      line-height: 1.5;
-      list-style: disc;
+      font-size: 16px;
+      line-height: 1.8;
+      list-style: none;
+      position: relative;
+    }
+    .modal-content ul li::before {
+      content: '•';
+      position: absolute;
+      left: -20px;
+      color: #3B82F6;
     }
     button {
-      padding: 10px 20px;
+      padding: 12px 24px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
       transition: all 0.3s ease;
-      min-width: 80px;
+      min-width: 100px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     button[type="submit"], button.confirm, button.return-button {
@@ -307,6 +305,7 @@
     h1 {
       line-height: 1.4;
     }
+    /* Image styles */
     .timetable-image-container {
       margin: 16px 0;
       text-align: center;
@@ -411,29 +410,22 @@
       }
       .modal-content {
         width: 95%;
-        padding: 16px;
-        max-height: 70vh;
-      }
-      .modal-content h2 {
-        font-size: 16px;
-        margin-bottom: 8px;
+        padding: 24px;
       }
       .modal-content p, .modal-content ul li {
-        font-size: 12px;
-        line-height: 1.3;
+        font-size: 14px;
       }
       .modal-content ul {
-        padding-left: 12px;
-        max-height: 120px;
+        padding-left: 16px;
       }
-      .modal-content ul li {
-        margin-bottom: 4px;
+      .modal-content ul li::before {
+        left: -16px;
       }
       button {
-        padding: 8px 16px;
-        font-size: 12px;
-        min-width: 70px;
-        border-radius: 6px;
+        padding: 10px 20px;
+        font-size: 14px;
+        min-width: 80px;
+        border-radius: 8px;
       }
       .calendar-container {
         padding: 0 4px;
@@ -485,12 +477,52 @@
   </style>
 </head>
 <body>
+  <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+  </script>
   <div class="form-container" id="formContainer">
     <h1 class="text-3xl font-bold text-center text-gray-800">
       2025年暑期跆拳道班<br>報名表格
     </h1>
     <div class="timetable-image-container">
-      <img src="2025summer_time_table.jpg" alt="2025 Summer Timetable" class="timetable-image" onclick="openImageModal()">
+      <img src="2025summer_time_table.JPG" alt="2025 Summer Timetable" class="timetable-image" onclick="openImageModal()">
     </div>
     <div class="intro-text text-gray-600 text-lg">
       <p class="spacer"></p>
@@ -558,27 +590,27 @@
       <div class="form-group">
         <h2 class="text-xl font-semibold mb-4 text-gray-800">課程選擇</h2>
         <div class="form-group">
-          <label>報名課堂 *</label>
+          <label>報名課堂（早鳥9折優惠） *</label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div class="course-card" data-value="全期4堂 $880" onclick="selectCourse(this)">
+            <div class="course-card" data-value="全期4堂 $792" onclick="selectCourse(this)">
               <h3 class="text-lg font-semibold">全期4堂</h3>
-              <p class="text-gray-600">$220/堂：$880</p>
+              <p class="text-gray-600">原價 $220/堂，早鳥9折：$792</p>
             </div>
-            <div class="course-card" data-value="全期6堂 $1,320" onclick="selectCourse(this)">
+            <div class="course-card" data-value="全期6堂 $1,188" onclick="selectCourse(this)">
               <h3 class="text-lg font-semibold">全期6堂</h3>
-              <p class="text-gray-600">$220/堂：$1,320</p>
+              <p class="text-gray-600">原價 $220/堂，早鳥9折：$1,188</p>
             </div>
-            <div class="course-card" data-value="全期8堂 $1,600" onclick="selectCourse(this)">
+            <div class="course-card" data-value="全期8堂 $1,440" onclick="selectCourse(this)">
               <h3 class="text-lg font-semibold">全期8堂</h3>
-              <p class="text-gray-600">原價 $220/堂(每堂減$20)：$1,600</p>
+              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$1,440</p>
             </div>
-            <div class="course-card" data-value="全期10堂 $2,000" onclick="selectCourse(this)">
+            <div class="course-card" data-value="全期10堂 $1,800" onclick="selectCourse(this)">
               <h3 class="text-lg font-semibold">全期10堂</h3>
-              <p class="text-gray-600">原價 $220/堂(每堂減$20)：$2,000</p>
+              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$1,800</p>
             </div>
-            <div class="course-card" data-value="全期12堂 $2,400" onclick="selectCourse(this)">
+            <div class="course-card" data-value="全期12堂 $2,160" onclick="selectCourse(this)">
               <h3 class="text-lg font-semibold">全期12堂</h3>
-              <p class="text-gray-600">原價 $220/堂(每堂減$20)：$2,400</p>
+              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$2,160</p>
             </div>
           </div>
           <input type="hidden" id="courseOption" name="entry.714236598">
@@ -653,38 +685,7 @@
     <button class="return-button" onclick="restartForm()">重新報名</button>
   </div>
 
-  <script type="text/javascript">
-    var gk_isXlsx = false;
-    var gk_xlsxFileLookup = {};
-    var gk_fileData = {};
-    function filledCell(cell) {
-      return cell !== '' && cell != null;
-    }
-    function loadFileData(filename) {
-      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-        try {
-          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-          var firstSheetName = workbook.SheetNames[0];
-          var worksheet = workbook.Sheets[firstSheetName];
-          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-          var filteredData = jsonData.filter(row => row.some(filledCell));
-          var headerRowIndex = filteredData.findIndex((row, index) =>
-            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-          );
-          if (headerRowIndex === -1 || headerRowIndex > 25) {
-            headerRowIndex = 0;
-          }
-          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-          csv = XLSX.utils.sheet_to_csv(csv, { header: 2 });
-          return csv;
-        } catch (e) {
-          console.error(e);
-          return "";
-        }
-      }
-      return gk_fileData[filename] || "";
-    }
-
+  <script>
     // 課程日期與時段數據
     const schedules = {
       '3歲至5歲': {
@@ -692,7 +693,7 @@
         '星期一 3:00pm - 4:00pm': { displayTime: '3:00pm', dates: ['2025-07-07', '2025-07-14', '2025-07-21', '2025-07-28', '2025-08-04', '2025-08-11', '2025-08-18', '2025-08-25'] },
         '星期二 4:15pm - 5:15pm': { displayTime: '4:15pm', dates: ['2025-07-08', '2025-07-15', '2025-07-22', '2025-07-29', '2025-08-05', '2025-08-12', '2025-08-19', '2025-08-26'] },
         '星期四 9:30am - 10:30am': { displayTime: '9:30am', dates: ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'] },
-        '星期四 3:00pm - 4:00pm': { displayTime: '3:00pm', dates: ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'] },
+        '星期四 4:15pm - 5:15pm': { displayTime: '4:15pm', dates: ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'] },
         '星期六 11:30am - 12:30pm': { displayTime: '11:30am', dates: ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30'] },
         '星期六 2:30pm - 3:30pm': { displayTime: '2:30pm', dates: ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30'] }
       },
@@ -779,7 +780,7 @@
     });
 
     // Calendar initialization
-    let previousSelectedDates = [];
+    let previousSelectedDates = []; // Store { date, timeSlot } objects
 
     function generateCalendarDates() {
       const julyStart = new Date('2025-07-01');
@@ -823,8 +824,10 @@
       console.log('Updating calendar for classType:', classType);
       console.log('Course option:', courseOption, 'Required classes:', requiredClasses);
 
+      // 清空日曆容器
       calendarContainer.innerHTML = '';
 
+      // 如果有選擇班別，顯示課程時間與日期區塊
       if (classType) {
         console.log('Showing schedule section');
         scheduleSection.classList.remove('hidden');
@@ -835,6 +838,7 @@
         return;
       }
 
+      // 獲取可用日期
       const availableDates = classType && schedules[classType]
         ? [...new Set(Object.values(schedules[classType]).flatMap(slot => slot.dates))]
         : [];
@@ -848,10 +852,13 @@
         return;
       }
 
+      // 更新課堂數量提示
       updateClassCountPrompt(previousSelectedDates.length, requiredClasses);
 
+      // 生成 7 月和 8 月日曆
       const { july, august } = generateCalendarDates();
 
+      // 生成表格的共用函數
       function createCalendarTable(dates, monthName, tableClass) {
         const weeks = [];
         let week = [];
@@ -1018,8 +1025,7 @@
 
       const selectedDates = previousSelectedDates;
       const requiredClasses = courseOption.value ? parseInt(courseOption.value.match(/\d+/)[0]) : 0;
-      // 當姓名為「測試」時，跳過課程日期數量驗證
-      if (nameInput.value.trim() !== '測試' && selectedDates.length !== requiredClasses) {
+      if (selectedDates.length !== requiredClasses) {
         datesError.style.display = 'block';
         datesError.textContent = `請選擇正確的 ${requiredClasses} 個課程日期，當前已選 ${selectedDates.length} 個。`;
         isValid = false;
@@ -1034,7 +1040,7 @@
         document.getElementById('confirmClassType').textContent = classType.value;
         const confirmDatesList = document.getElementById('confirmDates');
         confirmDatesList.innerHTML = selectedDates
-          .map(d => `<li>${formatDateString(d.date)} ${d.timeSlot}</li>`)
+          .map(date => `<li>${formatDateString(date.date)} ${date.timeSlot}</li>`)
           .join('');
         confirmModal.style.display = 'flex';
       }
@@ -1091,6 +1097,7 @@
       resetForm();
     }
 
+    // 初始化日曆
     updateCalendar();
   </script>
 </body>
