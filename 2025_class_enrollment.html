@@ -97,6 +97,10 @@
       justify-content: space-between;
       align-items: center;
     }
+    .modal-content ul li.pending-cancel {
+      color: #9CA3AF;
+      text-decoration: line-through;
+    }
     .modal-content ul li::before {
       content: '•';
       position: absolute;
@@ -173,11 +177,11 @@
       min-width: 120px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    button[type="submit"], button.confirm, button.return-button, button.close-class-modal {
+    button[type="submit"], button.confirm, button.return-button, button.close-class-modal, button.confirm-changes {
       background-color: #3B82F6;
       color: white;
     }
-    button[type="submit"]:hover, button.confirm:hover, button.return-button:hover, button.close-class-modal:hover {
+    button[type="submit"]:hover, button.confirm:hover, button.return-button:hover, button.close-class-modal:hover, button.confirm-changes:hover {
       background-color: #2563EB;
       transform: scale(1.05);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
@@ -375,7 +379,7 @@
         font-size: 28px;
       }
       h2 {
-        font-size: 18px;
+        font-size: 16px;
       }
       label {
         font-size: 14px;
@@ -395,20 +399,20 @@
         padding: 24px;
       }
       .modal-content p {
-        font-size: 14px;
+        font-size: 16px;
       }
       .modal-content ul {
         padding-left: 16px;
       }
       .modal-content ul li {
-        font-size: 14px;
+        font-size: 16px;
       }
       .modal-content ul li::before {
         left: -16px;
       }
       .modal-content .cancel-class {
-        font-size: 12px;
-        padding: 2px 6px;
+        font-size: 16px;
+        padding: 2px 8px;
       }
       .class-group h3 {
         font-size: 16px;
@@ -418,14 +422,14 @@
         margin-left: 8px;
       }
       .weekday-group h4 {
-        font-size: 14px;
+        font-size: 16px;
         padding-left: 6px;
       }
       .month-group {
         margin-left: 10px;
       }
       .month-group h5 {
-        font-size: 14px;
+        font-size: 16px;
         padding: 4px 8px;
       }
       .month-group ul {
@@ -578,6 +582,7 @@
       <p id="discountWarning" class="error" style="display: none;"></p>
       <div class="button-container">
         <button class="cancel" onclick="cancelSubmission()">返回</button>
+        <button class="confirm-changes" onclick="confirmChanges('confirmModal')">確定更改</button>
         <button class="confirm" onclick="confirmSubmission()">提交</button>
       </div>
     </div>
@@ -590,6 +595,7 @@
       <p><strong>課程日期與時段：</strong></p>
       <div id="classModalDates"></div>
       <div class="button-container">
+        <button class="confirm-changes" onclick="confirmChanges('classModal')">確定更改</button>
         <button class="close-class-modal" onclick="closeClassModal()">關閉</button>
       </div>
     </div>
@@ -781,13 +787,13 @@
     }
 
     function updateClassCountPrompt() {
-      const selectedCount = previousSelectedDates.length;
+      const selectedCount = previousSelectedDates.filter(d => !d.pendingCancel).length;
       const prompt = document.getElementById('classCountPrompt');
       const floatingCounter = document.getElementById('floating-counter');
       const text = `${selectedCount} 堂`;
       prompt.textContent = `已選：${text}`;
       floatingCounter.querySelector('.count').textContent = text;
-      floatingCounter.classList.toggle('hidden', selectedCount === 0);
+      floatingCounter.classList.toggle('hidden', selectedCount === 0 && !previousSelectedDates.some(d => d.pendingCancel));
     }
 
     function formatDateString(dateStr, short = false) {
@@ -820,19 +826,21 @@
 
       let html = '';
       Object.entries(grouped).forEach(([classType, weekdays]) => {
-        const classCount = Object.values(weekdays).flatMap(months => Object.values(months).flat()).length;
+        const classCount = Object.values(weekdays).flatMap(months => Object.values(months).flat()).filter(d => !d.pendingCancel).length;
         html += `<div class="class-group"><h3>${classType} (${classCount}堂)</h3>`;
         weekdayOrder.filter(weekday => weekday in weekdays).forEach(weekday => {
           const months = weekdays[weekday];
-          const weekdayCount = Object.values(months).flat().length;
+          const weekdayCount = Object.values(months).flat().filter(d => !d.pendingCancel).length;
           html += `<div class="weekday-group"><h4>${weekday} (${weekdayCount}堂)</h4>`;
           Object.entries(months).forEach(([month, dates]) => {
-            if (dates.length === 0) return; // Skip empty months
+            const activeDates = dates.filter(d => !d.pendingCancel);
+            if (activeDates.length === 0 && !dates.some(d => d.pendingCancel)) return; // Skip empty months
             const monthName = `${parseInt(month.split('-')[1])}月`;
-            html += `<div class="month-group"><h5>${monthName} (${dates.length}堂)</h5><ul>`;
+            html += `<div class="month-group"><h5>${monthName} (${activeDates.length}堂)</h5><ul>`;
             dates.sort((a, b) => a.originalIndex - b.originalIndex).forEach((date) => {
               const dateStr = formatDateWithDay(new Date(date.date), date.timeSlot, date.classType, date.weekday, true);
-              html += `<li data-index="${modalId}-${date.originalIndex}">${dateStr}<span class="cancel-class" onclick="cancelClass('${modalId}', ${date.originalIndex})">[取消]</span></li>`;
+              const pendingClass = date.pendingCancel ? 'pending-cancel' : '';
+              html += `<li class="${pendingClass}" data-index="${modalId}-${date.originalIndex}">${dateStr}<span class="cancel-class" onclick="cancelClass('${modalId}', ${date.originalIndex})">[${date.pendingCancel ? '恢復' : '取消'}]</span></li>`;
             });
             html += `</ul></div>`;
           });
@@ -844,8 +852,30 @@
     }
 
     function cancelClass(modalId, originalIndex) {
-      previousSelectedDates.splice(originalIndex, 1);
-      previousSelectedDates = previousSelectedDates.map((date, index) => ({ ...date, originalIndex: index }));
+      previousSelectedDates[originalIndex].pendingCancel = !previousSelectedDates[originalIndex].pendingCancel;
+      updateClassCountPrompt();
+      updateCalendar();
+      if (modalId === 'classModal') {
+        showClassModal();
+      } else {
+        document.getElementById('confirmDates').innerHTML = generateGroupedDates(previousSelectedDates, 'confirmModal');
+        document.getElementById('confirmTotalClasses').textContent = `共 ${previousSelectedDates.filter(d => !d.pendingCancel).length} 堂`;
+        const discountWarning = document.getElementById('discountWarning');
+        if (previousSelectedDates.filter(d => !d.pendingCancel).length < 8) {
+          discountWarning.textContent = '您選擇的課程少於8堂，無法享有9折優惠';
+          discountWarning.style.display = 'block';
+        } else {
+          discountWarning.style.display = 'none';
+        }
+      }
+      const confirmButton = document.getElementById(modalId).querySelector('.confirm-changes');
+      confirmButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'block' : 'none';
+    }
+
+    function confirmChanges(modalId) {
+      previousSelectedDates = previousSelectedDates
+        .filter(d => !d.pendingCancel)
+        .map((date, index) => ({ ...date, originalIndex: index }));
       document.getElementById('selectedDates').value = previousSelectedDates
         .map(d => formatDateWithDay(new Date(d.date), d.timeSlot, d.classType, d.weekday))
         .join(', ');
@@ -864,6 +894,8 @@
           discountWarning.style.display = 'none';
         }
       }
+      const confirmButton = document.getElementById(modalId).querySelector('.confirm-changes');
+      confirmButton.style.display = 'none';
     }
 
     function showClassModal() {
@@ -871,19 +903,39 @@
       const floatingCounter = document.getElementById('floating-counter');
       const classModalTotalClasses = document.getElementById('classModalTotalClasses');
       const classModalDates = document.getElementById('classModalDates');
+      const confirmButton = classModal.querySelector('.confirm-changes');
 
       floatingCounter.style.zIndex = '0';
       classModal.style.display = 'flex';
 
-      const selectedCount = previousSelectedDates.length;
+      const selectedCount = previousSelectedDates.filter(d => !d.pendingCancel).length;
       classModalTotalClasses.textContent = `共 ${selectedCount} 堂`;
       classModalDates.innerHTML = generateGroupedDates(previousSelectedDates, 'classModal');
+      confirmButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'block' : 'none';
     }
 
     function closeClassModal() {
       const classModal = document.getElementById('classModal');
       const floatingCounter = document.getElementById('floating-counter');
+      previousSelectedDates = previousSelectedDates.map(d => ({ ...d, pendingCancel: false }));
+      document.getElementById('selectedDates').value = previousSelectedDates
+        .map(d => formatDateWithDay(new Date(d.date), d.timeSlot, d.classType, d.weekday))
+        .join(', ');
+      updateClassCountPrompt();
+      updateCalendar();
       classModal.style.display = 'none';
+      floatingCounter.style.zIndex = '1000';
+    }
+
+    function cancelSubmission() {
+      console.log('Submission cancelled');
+      previousSelectedDates = previousSelectedDates.map(d => ({ ...d, pendingCancel: false }));
+      document.getElementById('selectedDates').value = previousSelectedDates
+        .map(d => formatDateWithDay(new Date(d.date), d.timeSlot, d.classType, d.weekday))
+        .join(', ');
+      updateClassCountPrompt();
+      updateCalendar();
+      confirmModal.style.display = 'none';
       floatingCounter.style.zIndex = '1000';
     }
 
@@ -1009,16 +1061,19 @@
                       d.classType === classType &&
                       d.date === dateStr &&
                       d.timeSlot === timeSlot &&
-                      d.weekday === slot.weekday
+                      d.weekday === slot.weekday &&
+                      !d.pendingCancel
                     ));
                     span.addEventListener('click', () => {
                       const isSelected = span.classList.contains('selected');
                       if (isSelected) {
-                        previousSelectedDates = previousSelectedDates.filter(d =>
-                          !(d.classType === classType &&
-                            d.date === dateStr &&
-                            d.timeSlot === timeSlot &&
-                            d.weekday === slot.weekday)
+                        previousSelectedDates = previousSelectedDates.map(d =>
+                          d.classType === classType &&
+                          d.date === dateStr &&
+                          d.timeSlot === timeSlot &&
+                          d.weekday === slot.weekday
+                            ? { ...d, pendingCancel: true }
+                            : d
                         );
                         span.classList.remove('selected');
                       } else {
@@ -1027,7 +1082,8 @@
                           date: dateStr,
                           timeSlot,
                           weekday: slot.weekday,
-                          originalIndex: previousSelectedDates.length
+                          originalIndex: previousSelectedDates.length,
+                          pendingCancel: false
                         });
                         span.classList.add('selected');
                       }
@@ -1105,7 +1161,7 @@
         isValid = false;
       }
 
-      const selectedDates = previousSelectedDates;
+      const selectedDates = previousSelectedDates.filter(d => !d.pendingCancel);
       if (selectedDates.length === 0) {
         datesError.style.display = 'block';
         datesError.textContent = '請選擇至少1個課程日期';
@@ -1129,7 +1185,7 @@
       document.getElementById('confirmPhone').textContent = phoneInput.value;
       document.getElementById('confirmTotalClasses').textContent = `共 ${classCount} 堂`;
       document.getElementById('confirmClassType').textContent = [...new Set(selectedDates.map(d => d.classType))].join(', ');
-      document.getElementById('confirmDates').innerHTML = generateGroupedDates(selectedDates, 'confirmModal');
+      document.getElementById('confirmDates').innerHTML = generateGroupedDates(previousSelectedDates, 'confirmModal');
 
       const discountWarning = document.getElementById('discountWarning');
       if (classCount < 8) {
@@ -1139,16 +1195,13 @@
         discountWarning.style.display = 'none';
       }
 
+      const confirmButton = confirmModal.querySelector('.confirm-changes');
+      confirmButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'block' : 'none';
+
       console.log('Showing confirmation modal');
       floatingCounter.style.zIndex = '0';
       confirmModal.style.display = 'flex';
     });
-
-    function cancelSubmission() {
-      console.log('Submission cancelled');
-      confirmModal.style.display = 'none';
-      floatingCounter.style.zIndex = '1000';
-    }
 
     async function confirmSubmission() {
       console.log('Confirming submission');
@@ -1163,7 +1216,7 @@
       }
 
       const formData = new FormData(form);
-      formData.set('entry.781986668', [...new Set(previousSelectedDates.map(d => d.classType))].join(', '));
+      formData.set('entry.781986668', [...new Set(previousSelectedDates.filter(d => !d.pendingCancel).map(d => d.classType))].join(', '));
       formData.set('entry.1451557446', document.getElementById('totalClasses').value);
 
       console.log('Form data:', Object.fromEntries(formData));
