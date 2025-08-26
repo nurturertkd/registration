@@ -118,6 +118,17 @@
       color: #DC2626;
       background-color: #FEE2E2;
     }
+    .modal-content .restore-class {
+      color: #10B981;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .modal-content .restore-class:hover {
+      color: #059669;
+      background-color: #D1FAE5;
+    }
     #confirmPhone {
       display: inline-block;
       max-width: 100%;
@@ -177,20 +188,20 @@
       min-width: 120px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    button[type="submit"], button.confirm, button.return-button, button.close-class-modal, button.confirm-changes {
+    button[type="submit"], button.confirm, button.return-button, button.confirm-changes {
       background-color: #3B82F6;
       color: white;
     }
-    button[type="submit"]:hover, button.confirm:hover, button.return-button:hover, button.close-class-modal:hover, button.confirm-changes:hover {
+    button[type="submit"]:hover, button.confirm:hover, button.return-button:hover, button.confirm-changes:hover {
       background-color: #2563EB;
       transform: scale(1.05);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
     }
-    button.cancel {
+    button.cancel, button.close-class-modal {
       background-color: #D1D5DB;
       color: #1F2937;
     }
-    button.cancel:hover {
+    button.cancel:hover, button.close-class-modal:hover {
       background-color: #B9C2CC;
       transform: scale(1.05);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
@@ -410,7 +421,7 @@
       .modal-content ul li::before {
         left: -16px;
       }
-      .modal-content .cancel-class {
+      .modal-content .cancel-class, .modal-content .restore-class {
         font-size: 16px;
         padding: 2px 8px;
       }
@@ -581,9 +592,9 @@
       <div id="confirmDates"></div>
       <p id="discountWarning" class="error" style="display: none;"></p>
       <div class="button-container">
-        <button class="cancel" onclick="cancelSubmission()">返回</button>
-        <button class="confirm-changes" onclick="confirmChanges('confirmModal')">確定更改</button>
         <button class="confirm" onclick="confirmSubmission()">提交</button>
+        <button class="confirm-changes" onclick="confirmChanges('confirmModal')" style="display: none;">確定更改</button>
+        <button class="cancel" onclick="cancelSubmission()">返回</button>
       </div>
     </div>
   </div>
@@ -595,7 +606,7 @@
       <p><strong>課程日期與時段：</strong></p>
       <div id="classModalDates"></div>
       <div class="button-container">
-        <button class="confirm-changes" onclick="confirmChanges('classModal')">確定更改</button>
+        <button class="confirm-changes" onclick="confirmChanges('classModal')" style="display: none;">確定更改</button>
         <button class="close-class-modal" onclick="closeClassModal()">關閉</button>
       </div>
     </div>
@@ -840,7 +851,8 @@
             dates.sort((a, b) => a.originalIndex - b.originalIndex).forEach((date) => {
               const dateStr = formatDateWithDay(new Date(date.date), date.timeSlot, date.classType, date.weekday, true);
               const pendingClass = date.pendingCancel ? 'pending-cancel' : '';
-              html += `<li class="${pendingClass}" data-index="${modalId}-${date.originalIndex}">${dateStr}<span class="cancel-class" onclick="cancelClass('${modalId}', ${date.originalIndex})">[${date.pendingCancel ? '恢復' : '取消'}]</span></li>`;
+              const actionClass = date.pendingCancel ? 'restore-class' : 'cancel-class';
+              html += `<li class="${pendingClass}" data-index="${modalId}-${date.originalIndex}">${dateStr}<span class="${actionClass}" onclick="cancelClass('${modalId}', ${date.originalIndex})">[${date.pendingCancel ? '恢復' : '取消'}]</span></li>`;
             });
             html += `</ul></div>`;
           });
@@ -854,7 +866,6 @@
     function cancelClass(modalId, originalIndex) {
       previousSelectedDates[originalIndex].pendingCancel = !previousSelectedDates[originalIndex].pendingCancel;
       updateClassCountPrompt();
-      updateCalendar();
       if (modalId === 'classModal') {
         showClassModal();
       } else {
@@ -867,6 +878,11 @@
         } else {
           discountWarning.style.display = 'none';
         }
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmButton = confirmModal.querySelector('.confirm');
+        const confirmChangesButton = confirmModal.querySelector('.confirm-changes');
+        confirmButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'none' : 'block';
+        confirmChangesButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'block' : 'none';
       }
       const confirmButton = document.getElementById(modalId).querySelector('.confirm-changes');
       confirmButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'block' : 'none';
@@ -893,9 +909,12 @@
         } else {
           discountWarning.style.display = 'none';
         }
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmButton = confirmModal.querySelector('.confirm');
+        const confirmChangesButton = confirmModal.querySelector('.confirm-changes');
+        confirmButton.style.display = 'block';
+        confirmChangesButton.style.display = 'none';
       }
-      const confirmButton = document.getElementById(modalId).querySelector('.confirm-changes');
-      confirmButton.style.display = 'none';
     }
 
     function showClassModal() {
@@ -935,6 +954,11 @@
         .join(', ');
       updateClassCountPrompt();
       updateCalendar();
+      const confirmModal = document.getElementById('confirmModal');
+      const confirmButton = confirmModal.querySelector('.confirm');
+      const confirmChangesButton = confirmModal.querySelector('.confirm-changes');
+      confirmButton.style.display = 'block';
+      confirmChangesButton.style.display = 'none';
       confirmModal.style.display = 'none';
       floatingCounter.style.zIndex = '1000';
     }
@@ -1067,13 +1091,11 @@
                     span.addEventListener('click', () => {
                       const isSelected = span.classList.contains('selected');
                       if (isSelected) {
-                        previousSelectedDates = previousSelectedDates.map(d =>
-                          d.classType === classType &&
-                          d.date === dateStr &&
-                          d.timeSlot === timeSlot &&
-                          d.weekday === slot.weekday
-                            ? { ...d, pendingCancel: true }
-                            : d
+                        previousSelectedDates = previousSelectedDates.filter(d =>
+                          !(d.classType === classType &&
+                            d.date === dateStr &&
+                            d.timeSlot === timeSlot &&
+                            d.weekday === slot.weekday)
                         );
                         span.classList.remove('selected');
                       } else {
@@ -1195,8 +1217,10 @@
         discountWarning.style.display = 'none';
       }
 
-      const confirmButton = confirmModal.querySelector('.confirm-changes');
-      confirmButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'block' : 'none';
+      const confirmButton = confirmModal.querySelector('.confirm');
+      const confirmChangesButton = confirmModal.querySelector('.confirm-changes');
+      confirmButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'none' : 'block';
+      confirmChangesButton.style.display = previousSelectedDates.some(d => d.pendingCancel) ? 'block' : 'none';
 
       console.log('Showing confirmation modal');
       floatingCounter.style.zIndex = '0';
