@@ -819,8 +819,7 @@
 
     function selectClassType(classType) {
       selectedClassType = classType;
-      document.getElementById('classType').value = classType;
-      previousSelectedDates = previousSelectedDates.filter(d => d.classType === classType);
+      document.getElementById('classType').value = [...new Set(previousSelectedDates.map(d => d.classType))].join(', ');
       previousSelectedDates = previousSelectedDates.map((date, index) => ({ ...date, originalIndex: index }));
       document.getElementById('selectedDates').value = previousSelectedDates
         .map(d => formatDateWithDay(new Date(d.date), d.timeSlot, d.classType, d.weekday))
@@ -894,7 +893,7 @@
       const dayOfWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][date.getDay()];
       const cleanTimeSlot = timeSlot.trim();
       return short
-        ? `${formatDateString(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`, true)} ${cleanTimeSlot}`
+        ? `${formatDateString(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`, true)} ${cleanTimeSlot} (${classType})`
         : `${formatDateString(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`)} ${dayOfWeek} ${cleanTimeSlot} (${classType})`;
     }
 
@@ -1021,6 +1020,7 @@
       previousSelectedDates = [];
       document.getElementById('selectedDates').value = '';
       document.getElementById('totalClasses').value = '';
+      document.getElementById('classType').value = '';
       updateClassCountPrompt();
       updateCalendar();
       closeClassModal();
@@ -1064,6 +1064,7 @@
       document.getElementById('selectedDates').value = previousSelectedDates
         .map(d => formatDateWithDay(new Date(d.date), d.timeSlot, d.classType, d.weekday))
         .join(', ');
+      document.getElementById('classType').value = [...new Set(previousSelectedDates.map(d => d.classType))].join(', ');
       updateClassCountPrompt();
       updateCalendar();
       const confirmModal = document.getElementById('confirmModal');
@@ -1224,6 +1225,7 @@
                       document.getElementById('selectedDates').value = previousSelectedDates
                         .map(d => formatDateWithDay(new Date(d.date), d.timeSlot, d.classType, d.weekday))
                         .join(', ');
+                      document.getElementById('classType').value = [...new Set(previousSelectedDates.map(d => d.classType))].join(', ');
                       console.log('Updated selectedDates:', document.getElementById('selectedDates').value);
                       updateClassCountPrompt();
                     });
@@ -1304,7 +1306,7 @@
         isValid = false;
       }
 
-      if (!selectedClassType) {
+      if (!previousSelectedDates.length) {
         classTypeError.style.display = 'block';
         isValid = false;
       }
@@ -1320,7 +1322,7 @@
         console.log('Validation failed:', {
           name: !nameInput.value.trim(),
           phone: !phoneInput.value.match(/\+?\d{8,}/),
-          classType: !selectedClassType,
+          classType: !previousSelectedDates.length,
           dates: selectedDates.length === 0
         });
         return;
