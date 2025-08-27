@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2025年秋季跆拳道班報名表格</title>
+  <title>培匠跆拳道班報名表</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -336,7 +336,7 @@
       background-color: #E5E7EB;
     }
     .calendar-table .time-slot span:hover {
-      transform: scale(1.05); /* 保留動畫，但移除變色 */
+      transform: scale(1.05);
     }
     .calendar-table .time-slot span.selected {
       background-color: #3B82F6;
@@ -365,14 +365,6 @@
       text-align: center;
       margin-bottom: 16px;
       display: none;
-    }
-    img.banner {
-      width: 100%;
-      max-width: 672px;
-      margin-left: auto;
-      margin-right: auto;
-      border-radius: 8px;
-      margin-bottom: 24px;
     }
     #floating-counter {
       position: fixed;
@@ -530,9 +522,6 @@
       #errorMessage {
         font-size: 14px;
       }
-      img.banner {
-        margin-bottom: 12px;
-      }
       #floating-counter {
         width: 60px;
         height: 60px;
@@ -548,23 +537,15 @@
 </head>
 <body>
   <div class="form-container" id="formContainer">
-    <img src="form_banner.png" alt="2025年秋季跆拳道班橫幅" class="banner">
-    <h1 class="text-3xl font-bold text-center text-gray-800">
-      2025年秋季跆拳道班<br>報名表格
-    </h1>
+    <h1 class="text-3xl font-bold text-center text-gray-800">培匠跆拳道班報名表</h1>
+    <p class="text-sm text-gray-600 text-center mb-6">香港實用跆拳道協會旗下道場</p>
     <div id="errorMessage"></div>
     <div class="intro-text text-gray-600 text-lg">
       <p class="spacer"></p>
-      <p class="spacer"></p>
       <p>家長你好！👋</p>
-      <p>以下為2025年秋季班報名表格📝</p>
+      <p>以下為2025年恆常班報名表格📝</p>
       <p>請按照小朋友時間表，填寫以下資訊以完成報名程序</p>
-      <p class="spacer"></p>
       <p>成功提交報名後，您將收到WhatsApp確認訊息，以及付款詳情💬</p>
-      <p class="spacer"></p>
-      <p><strong>秋季9折優惠，立刻報名！🔥</strong></p>
-      <p>現有學生只要9月至12月期間報讀8堂或以上，即可享有9折優惠！</p>
-      <p class="spacer"></p>
       <p class="spacer"></p>
     </div>
 
@@ -586,9 +567,7 @@
       <div class="form-group">
         <h2 class="text-xl font-semibold mb-4 text-gray-800">課程選擇</h2>
         <div class="form-group">
-          <label>報名課堂（9折優惠）</label>
-          <p class="text-gray-600 mt-2">9月至12月期間，只要報讀8堂或以上，即可有9折優惠，$180/堂（原價$200）</p>
-          <p class="text-gray-600 mt-2">*訓練班除外</p>
+          <label>報名課堂</label>
           <input type="hidden" id="totalClasses" name="entry.1451557446">
         </div>
         <div class="form-group">
@@ -630,7 +609,6 @@
       <p><strong>所選班別：</strong> <span id="confirmClassType"></span></p>
       <p><strong>課程日期與時段：</strong></p>
       <div id="confirmDates"></div>
-      <p id="discountWarning" class="error" style="display: none;"></p>
       <div class="button-container">
         <div class="left-buttons"></div>
         <div class="right-buttons">
@@ -957,13 +935,6 @@
       } else {
         document.getElementById('confirmDates').innerHTML = generateGroupedDates(previousSelectedDates, 'confirmModal');
         document.getElementById('confirmTotalClasses').textContent = `共 ${previousSelectedDates.filter(d => !d.pendingCancel).length} 堂`;
-        const discountWarning = document.getElementById('discountWarning');
-        if (previousSelectedDates.filter(d => !d.pendingCancel).length < 8) {
-          discountWarning.textContent = '您選擇的課程少於8堂，無法享有9折優惠';
-          discountWarning.style.display = 'block';
-        } else {
-          discountWarning.style.display = 'none';
-        }
         const confirmModal = document.getElementById('confirmModal');
         const confirmButton = confirmModal.querySelector('.confirm');
         const confirmChangesButton = confirmModal.querySelector('.confirm-changes');
@@ -988,13 +959,6 @@
       } else {
         document.getElementById('confirmDates').innerHTML = generateGroupedDates(previousSelectedDates, 'confirmModal');
         document.getElementById('confirmTotalClasses').textContent = `共 ${previousSelectedDates.length} 堂`;
-        const discountWarning = document.getElementById('discountWarning');
-        if (previousSelectedDates.length < 8) {
-          discountWarning.textContent = '您選擇的課程少於8堂，無法享有9折優惠';
-          discountWarning.style.display = 'block';
-        } else {
-          discountWarning.style.display = 'none';
-        }
         const confirmModal = document.getElementById('confirmModal');
         const confirmButton = confirmModal.querySelector('.confirm');
         const confirmChangesButton = confirmModal.querySelector('.confirm-changes');
@@ -1297,7 +1261,6 @@
     const thankYouPage = document.getElementById('thankYouPage');
     const floatingCounter = document.getElementById('floating-counter');
 
-    // 點擊模態框外部關閉
     window.addEventListener('click', function(event) {
       if (event.target === confirmModal) {
         cancelSubmission();
@@ -1360,14 +1323,6 @@
       document.getElementById('confirmTotalClasses').textContent = `共 ${classCount} 堂`;
       document.getElementById('confirmClassType').textContent = [...new Set(selectedDates.map(d => d.classType))].join(', ');
       document.getElementById('confirmDates').innerHTML = generateGroupedDates(previousSelectedDates, 'confirmModal');
-
-      const discountWarning = document.getElementById('discountWarning');
-      if (classCount < 8) {
-        discountWarning.textContent = '您選擇的課程少於8堂，無法享有9折優惠';
-        discountWarning.style.display = 'block';
-      } else {
-        discountWarning.style.display = 'none';
-      }
 
       const confirmButton = confirmModal.querySelector('.confirm');
       const confirmChangesButton = confirmModal.querySelector('.confirm-changes');
