@@ -17,9 +17,9 @@
     }
     .form-container {
       background: white;
-      padding: 48px;
+      padding: 56px;
       border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
     .form-group {
       margin-bottom: 32px;
@@ -35,7 +35,7 @@
       width: 100%;
       padding: 14px;
       border: 1px solid #D1D5DB;
-      border-radius: 8px;
+      border-radius: 10px;
       box-sizing: border-box;
       font-size: 16px;
       height: 48px;
@@ -50,7 +50,7 @@
     input:focus {
       outline: none;
       border-color: #3B82F6;
-      box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
     }
     .error {
       color: #EF4444;
@@ -186,9 +186,9 @@
       padding-left: 30px;
     }
     button {
-      padding: 12px 24px;
+      padding: 14px 28px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 16px;
       font-weight: 500;
@@ -224,29 +224,34 @@
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
     }
     button.class-type-button {
-      background-color: #D1D5DB;
+      background-color: #E0F2FE;
       color: #1F2937;
-      margin-right: 8px;
-      margin-bottom: 8px;
+      margin-right: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #93C5FD;
+      padding: 12px 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
     button.class-type-button.selected {
-      background-color: #3B82F6;
-      color: white;
+      background-color: #1E40AF;
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     button.class-type-button:hover {
-      background-color: #B9C2CC;
+      background-color: #BFDBFE;
       transform: scale(1.05);
     }
     button.class-type-button.selected:hover {
-      background-color: #2563EB;
+      background-color: #1E3A8A;
       transform: scale(1.05);
     }
     #thankYouPage {
       display: none;
       background: white;
-      padding: 48px;
+      padding: 56px;
       border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       text-align: center;
       margin-top: 40px;
       opacity: 0;
@@ -315,7 +320,7 @@
       cursor: not-allowed;
     }
     .calendar-table .date {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
       margin-bottom: 8px;
       color: #1F2937;
@@ -334,14 +339,17 @@
       cursor: pointer;
       transition: all 0.3s ease;
       background-color: #E5E7EB;
+      border: 1px solid #D1D5DB;
     }
     .calendar-table .time-slot span:hover {
       transform: scale(1.05);
+      background-color: #D1D5DB;
     }
     .calendar-table .time-slot span.selected {
       background-color: #3B82F6;
       color: white;
       transform: scale(1.05);
+      border: 1px solid #2563EB;
     }
     .calendar-title {
       font-size: 18px;
@@ -358,6 +366,10 @@
     }
     h1 {
       line-height: 1.4;
+      font-size: 2.25rem; /* text-4xl */
+      font-weight: 700;
+      border-bottom: 2px solid #3B82F6;
+      padding-bottom: 8px;
     }
     #errorMessage {
       color: #EF4444;
@@ -379,7 +391,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      border: 2px solid #FFFFFF;
       z-index: 1000;
       font-size: 14px;
       font-weight: 500;
@@ -389,7 +402,7 @@
     }
     #floating-counter:hover {
       background-color: #2563EB;
-      transform: scale(1.1);
+      transform: rotate(5deg) scale(1.1);
     }
     #floating-counter.hidden {
       display: none;
@@ -407,13 +420,13 @@
         padding: 12px;
       }
       .form-container, #thankYouPage {
-        padding: 24px;
+        padding: 32px;
       }
       .form-group {
         margin-bottom: 24px;
       }
       h1 {
-        font-size: 28px;
+        font-size: 1.875rem; /* text-3xl */
       }
       h2 {
         font-size: 16px;
@@ -473,17 +486,18 @@
         padding-left: 15px;
       }
       button {
-        padding: 10px 20px;
+        padding: 12px 20px;
         font-size: 14px;
-        min-width: 80px;
-        border-radius: 8px;
+        min-width: 100px;
+        border-radius: 10px;
       }
       button.class-type-button {
-        margin-right: 4px;
-        margin-bottom: 4px;
-        padding: 8px 16px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        padding: 10px 20px;
         font-size: 14px;
-        min-width: 80px;
+        min-width: 90px;
+        border-radius: 10px;
       }
       .calendar-container {
         padding: 0 4px;
@@ -501,7 +515,7 @@
         font-weight: 600;
       }
       .calendar-table .date {
-        font-size: 14px;
+        font-size: 16px;
       }
       .calendar-table .time-slot span {
         font-size: 10px;
@@ -537,8 +551,8 @@
 </head>
 <body>
   <div class="form-container" id="formContainer">
-    <h1 class="text-3xl font-bold text-center text-gray-800">培匠跆拳道班報名表</h1>
-    <p class="text-sm text-gray-600 text-center mb-6">香港實用跆拳道協會旗下道場</p>
+    <h1 class="text-4xl font-bold text-center text-gray-800">培匠跆拳道班報名表</h1>
+    <p class="text-base text-gray-600 text-center mb-6">香港實用跆拳道協會旗下道場</p>
     <div id="errorMessage"></div>
     <div class="intro-text text-gray-600 text-lg">
       <p class="spacer"></p>
@@ -569,7 +583,7 @@
         <input type="hidden" id="totalClasses" name="entry.1451557446">
         <div class="form-group">
           <label>選擇班別</label>
-          <div id="classTypeButtons" class="flex flex-wrap gap-2 mt-2"></div>
+          <div id="classTypeButtons" class="flex flex-wrap gap-3 mt-2"></div>
           <input type="hidden" id="classType" name="entry.781986668">
           <span id="classTypeError" class="error">請選擇班別</span>
         </div>
