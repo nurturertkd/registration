@@ -10,8 +10,11 @@
     body {
       font-family: 'Noto Sans TC', Arial, sans-serif;
       max-width: 960px;
-      margin: 40px auto;
-      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       background: linear-gradient(135deg, #E0F2FE 0%, #F3F4F6 100%);
       color: #1F2937;
     }
@@ -20,6 +23,7 @@
       padding: 56px;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
     }
     .form-group {
       margin-bottom: 32px;
@@ -253,7 +257,7 @@
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       text-align: center;
-      margin-top: 40px;
+      width: 100%;
       opacity: 0;
       transition: opacity 0.5s ease-in;
     }
@@ -416,7 +420,6 @@
     }
     @media (max-width: 600px) {
       body {
-        margin: 16px auto;
         padding: 12px;
       }
       .form-container, #thankYouPage {
@@ -893,7 +896,7 @@
       const dayOfWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][date.getDay()];
       const cleanTimeSlot = timeSlot.trim();
       return short
-        ? `${formatDateString(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`, true)} ${cleanTimeSlot} (${classType})`
+        ? `${formatDateString(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`, true)} ${cleanTimeSlot}`
         : `${formatDateString(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`)} ${dayOfWeek} ${cleanTimeSlot} (${classType})`;
     }
 
