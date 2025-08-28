@@ -296,12 +296,6 @@
     .calendar-table.october {
       background: #F3F4F6;
     }
-    .calendar-table.november {
-      background: #E6F3F2;
-    }
-    .calendar-table.december {
-      background: white;
-    }
     .calendar-table th, .calendar-table td {
       padding: 14px;
       text-align: center;
@@ -560,7 +554,7 @@
     <div class="intro-text text-gray-600 text-lg">
       <p class="spacer"></p>
       <p>家長你好！👋</p>
-      <p>以下為2025年恆常班報名表格📝</p>
+      <p>以下為2025年9-10月恆常班報名表格📝</p>
       <p>請按照小朋友時間表，填寫以下資訊以完成報名程序</p>
       <p>成功提交報名後，您將收到WhatsApp確認訊息，以及付款詳情💬</p>
       <p class="spacer"></p>
@@ -700,9 +694,9 @@
     let selectedClassType = '';
     const weekdayOrder = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
 
-    const spreadsheetId = '1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU';
-    const sheetName = '202509恆常班時間表';
-    const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=435906604`;
+    const spreadsheetId = '1faIU51oM30c-QSc0uEgu1Zkr-4W10uJrJplFfqcBcbE';
+    const sheetName = '202509恆常班時間表'; // 請確認新工作表名稱
+    const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=1466254443`;
 
     async function loadScheduleFromSheet() {
       try {
@@ -735,7 +729,11 @@
             const hasAsterisk = row.c[3]?.v === '*';
             const dates = row.c.slice(4)
               .filter(cell => cell && cell.v && /^\d{4}-\d{2}-\d{2}$/.test(cell.v))
-              .map(cell => cell.v.trim());
+              .map(cell => cell.v.trim())
+              .filter(date => {
+                const [year, month] = date.split('-').map(Number);
+                return year === 2025 && (month === 9 || month === 10);
+              });
 
             console.log(`Row ${index + 1}: classType=${classType}, weekday=${weekday}, timeSlot=${timeSlot}, hasAsterisk=${hasAsterisk}, dates=${JSON.stringify(dates)}`);
 
@@ -760,12 +758,12 @@
               });
               console.log(`Parsed time: startTime=${startTime}, fullTimeSlot=${cleanTimeSlot}`);
             } else {
-              console.warn(`Row ${index + 1} skipped: invalid classType=${classType}, weekday=${weekday}, timeSlot=${cleanTimeSlot}, or no dates`);
+              console.warn(`Row ${index + 1} skipped: invalid classType=${classType}, weekday=${weekday}, timeSlot=${cleanTimeSlot}, or no valid dates`);
             }
           });
 
           if (Object.keys(newSchedules).length === 0) {
-            throw new Error('No valid class types found. Ensure column A contains class types (e.g., 品勢班), B has valid weekdays (e.g., 星期二), C has time slots (e.g., 9:15am - 10:15am), and E:AA have dates (e.g., 2025-09-01).');
+            throw new Error('No valid class types found for September or October 2025. Ensure column A contains class types (e.g., 品勢班), B has valid weekdays (e.g., 星期二), C has time slots (e.g., 9:15am - 10:15am), and E:AA have dates (e.g., 2025-09-01).');
           }
 
           schedules = newSchedules;
@@ -775,7 +773,7 @@
           updateCalendar();
           document.getElementById('errorMessage').style.display = 'none';
         } else {
-          throw new Error('No data found in the sheet. Verify sheet name "202509恆常班時間表" and ensure data exists in columns A:AA.');
+          throw new Error('No data found in the sheet for September or October 2025. Verify sheet name "202509恆常班時間表" and ensure data exists in columns A:AA.');
         }
       } catch (error) {
         console.error('Load schedule error:', error);
@@ -787,7 +785,7 @@
         } else if (error.message.includes('JSON parsing')) {
           userMessage = '試算表數據格式錯誤，請聯繫管理員檢查工作表「202509恆常班時間表」。';
         } else if (error.message.includes('No data found') || error.message.includes('No valid class types')) {
-          userMessage = '試算表無有效數據，請確認工作表「202509恆常班時間表」包含班別（A）、星期（B）、時間段（C）、星號（D）和日期（E:AA）。';
+          userMessage = '試算表無有效數據，請確認工作表「202509恆常班時間表」包含班別（A）、星期（B）、時間段（C）、星號（D）和日期（E:AA），並包含2025年9月或10月的日期。';
         }
         showError(`${userMessage}（錯誤：${error.message}）`);
         document.getElementById('calendar').innerHTML = '<p class="text-red-600 text-center">無法載入課程時間表，請稍後再試。</p>';
@@ -837,15 +835,9 @@
       const septemberEnd = new Date('2025-09-30');
       const octoberStart = new Date('2025-10-01');
       const octoberEnd = new Date('2025-10-31');
-      const novemberStart = new Date('2025-11-01');
-      const novemberEnd = new Date('2025-11-30');
-      const decemberStart = new Date('2025-12-01');
-      const decemberEnd = new Date('2025-12-31');
 
       const septemberDates = [];
       const octoberDates = [];
-      const novemberDates = [];
-      const decemberDates = [];
 
       let currentDate = new Date(septemberStart);
       while (currentDate <= septemberEnd) {
@@ -859,19 +851,7 @@
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      currentDate = new Date(novemberStart);
-      while (currentDate <= novemberEnd) {
-        novemberDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      currentDate = new Date(decemberStart);
-      while (currentDate <= decemberEnd) {
-        decemberDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      return { septemberDates, octoberDates, novemberDates, decemberDates };
+      return { septemberDates, octoberDates };
     }
 
     function updateClassCountPrompt() {
@@ -1115,7 +1095,7 @@
 
       updateClassCountPrompt();
 
-      const { septemberDates, octoberDates, novemberDates, decemberDates } = generateCalendarDates();
+      const { septemberDates, octoberDates } = generateCalendarDates();
 
       function createCalendarTable(dates, monthName, tableClass) {
         console.log('Creating calendar table for:', monthName);
@@ -1257,8 +1237,6 @@
 
       createCalendarTable(septemberDates, '9月', 'september');
       createCalendarTable(octoberDates, '10月', 'october');
-      createCalendarTable(novemberDates, '11月', 'november');
-      createCalendarTable(decemberDates, '12月', 'december');
     }
 
     const form = document.getElementById('registrationForm');
