@@ -290,10 +290,10 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
-    .calendar-table.september {
+    .calendar-table.month-0 {
       background: #DBEAFE;
     }
-    .calendar-table.october {
+    .calendar-table.month-1 {
       background: #F3F4F6;
     }
     .calendar-table th, .calendar-table td {
@@ -411,6 +411,12 @@
     #floating-counter .count {
       font-size: 16px;
       font-weight: 700;
+    }
+    footer {
+      margin-top: 32px;
+      text-align: center;
+      color: #9CA3AF;
+      font-size: 14px;
     }
     @media (max-width: 600px) {
       body {
@@ -543,6 +549,10 @@
       #floating-counter .count {
         font-size: 14px;
       }
+      footer {
+        font-size: 12px;
+        margin-top: 24px;
+      }
     }
   </style>
 </head>
@@ -554,7 +564,7 @@
     <div class="intro-text text-gray-600 text-lg">
       <p class="spacer"></p>
       <p>家長你好！👋</p>
-      <p>以下為2025年9-10月恆常班報名表格📝</p>
+      <p id="introMonths">以下為課程報名表格📝</p>
       <p>請按照小朋友時間表，填寫以下資訊以完成報名程序</p>
       <p>成功提交報名後，您將收到WhatsApp確認訊息，以及付款詳情💬</p>
       <p class="spacer"></p>
@@ -688,15 +698,23 @@
     <span class="count">0 堂</span>
   </div>
 
+  <footer>
+    版本 1.1 - 更新日期：2025年10月20日
+  </footer>
+
   <script>
     let schedules = {};
     let previousSelectedDates = [];
     let selectedClassType = '';
     const weekdayOrder = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
-
+    const year = '2025';
+    const months = ['11', '12']; // 配置月份
+    const sheetName = `${year}${months[0]}恆常班時間表`;
     const spreadsheetId = '1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU';
-    const sheetName = '202509恆常班時間表'; // 請確認新工作表名稱
     const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=435906604`;
+
+    // 動態更新介紹文字
+    document.getElementById('introMonths').textContent = `以下為${year}年${months.join('-')}月恆常班報名表格📝`;
 
     async function loadScheduleFromSheet() {
       try {
@@ -731,8 +749,8 @@
               .filter(cell => cell && cell.v && /^\d{4}-\d{2}-\d{2}$/.test(cell.v))
               .map(cell => cell.v.trim())
               .filter(date => {
-                const [year, month] = date.split('-').map(Number);
-                return year === 2025 && (month === 9 || month === 10);
+                const [rowYear, month] = date.split('-').map(Number);
+                return rowYear === parseInt(year) && months.includes(month.toString().padStart(2, '0'));
               });
 
             console.log(`Row ${index + 1}: classType=${classType}, weekday=${weekday}, timeSlot=${timeSlot}, hasAsterisk=${hasAsterisk}, dates=${JSON.stringify(dates)}`);
@@ -763,7 +781,7 @@
           });
 
           if (Object.keys(newSchedules).length === 0) {
-            throw new Error('No valid class types found for September or October 2025. Ensure column A contains class types (e.g., 品勢班), B has valid weekdays (e.g., 星期二), C has time slots (e.g., 9:15am - 10:15am), and E:AA have dates (e.g., 2025-09-01).');
+            throw new Error(`No valid class types found for ${year} ${months.join(' or ')}. Ensure column A contains class types (e.g., 品勢班), B has valid weekdays (e.g., 星期二), C has time slots (e.g., 9:15am - 10:15am), and E:AA have dates (e.g., ${year}-${months[0]}-01).`);
           }
 
           schedules = newSchedules;
@@ -773,7 +791,7 @@
           updateCalendar();
           document.getElementById('errorMessage').style.display = 'none';
         } else {
-          throw new Error('No data found in the sheet for September or October 2025. Verify sheet name "202509恆常班時間表" and ensure data exists in columns A:AA.');
+          throw new Error(`No data found in the sheet for ${year} ${months.join(' or ')}. Verify sheet name "${sheetName}" and ensure data exists in columns A:AA.`);
         }
       } catch (error) {
         console.error('Load schedule error:', error);
@@ -781,11 +799,11 @@
         if (error.message.includes('HTTP error')) {
           userMessage = '無法連接到試算表，請檢查網路或試算表是否設定為「任何人擁有連結即可查看」。';
         } else if (error.message.includes('JSONP response')) {
-          userMessage = '試算表未公開，請在 Google 試算表設定為「任何人擁有連結即可查看」。請前往 https://docs.google.com/spreadsheets/d/1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU/edit，點擊「分享」並選擇「任何人擁有連結」。';
+          userMessage = `試算表未公開，請在 Google 試算表設定為「任何人擁有連結即可查看」。請前往 https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit，點擊「分享」並選擇「任何人擁有連結」。`;
         } else if (error.message.includes('JSON parsing')) {
-          userMessage = '試算表數據格式錯誤，請聯繫管理員檢查工作表「202509恆常班時間表」。';
+          userMessage = `試算表數據格式錯誤，請聯繫管理員檢查工作表「${sheetName}」。`;
         } else if (error.message.includes('No data found') || error.message.includes('No valid class types')) {
-          userMessage = '試算表無有效數據，請確認工作表「202509恆常班時間表」包含班別（A）、星期（B）、時間段（C）、星號（D）和日期（E:AA），並包含2025年9月或10月的日期。';
+          userMessage = `試算表無有效數據，請確認工作表「${sheetName}」包含班別（A）、星期（B）、時間段（C）、星號（D）和日期（E:AA），並包含${year}年${months.join('或')}月的日期。`;
         }
         showError(`${userMessage}（錯誤：${error.message}）`);
         document.getElementById('calendar').innerHTML = '<p class="text-red-600 text-center">無法載入課程時間表，請稍後再試。</p>';
@@ -804,7 +822,7 @@
 
       console.log('Available class types:', Object.keys(schedules));
       if (Object.keys(schedules).length === 0) {
-        showError('無班別選項，請確認試算表「202509恆常班時間表」數據是否正確或已公開。');
+        showError(`無班別選項，請確認試算表「${sheetName}」數據是否正確或已公開。`);
         return;
       }
 
@@ -831,27 +849,21 @@
     }
 
     function generateCalendarDates() {
-      const septemberStart = new Date('2025-09-01');
-      const septemberEnd = new Date('2025-09-30');
-      const octoberStart = new Date('2025-10-01');
-      const octoberEnd = new Date('2025-10-31');
-
-      const septemberDates = [];
-      const octoberDates = [];
-
-      let currentDate = new Date(septemberStart);
-      while (currentDate <= septemberEnd) {
-        septemberDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      currentDate = new Date(octoberStart);
-      while (currentDate <= octoberEnd) {
-        octoberDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      return { septemberDates, octoberDates };
+      const calendars = [];
+      months.forEach((month, index) => {
+        const startDate = new Date(`${year}-${month}-01`);
+        const endDate = new Date(startDate);
+        endDate.setMonth(endDate.getMonth() + 1);
+        endDate.setDate(0); // Last day of the month
+        const dates = [];
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          dates.push(new Date(currentDate));
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        calendars.push({ month, dates, index });
+      });
+      return calendars;
     }
 
     function updateClassCountPrompt() {
@@ -884,7 +896,7 @@
       const grouped = dates.reduce((acc, date, originalIndex) => {
         const classType = date.classType;
         const weekday = date.weekday;
-        const month = date.date.slice(0, 7); // e.g., "2025-09"
+        const month = date.date.slice(0, 7); // e.g., "2025-11"
         if (!acc[classType]) acc[classType] = {};
         if (!acc[classType][weekday]) acc[classType][weekday] = {};
         if (!acc[classType][weekday][month]) acc[classType][weekday][month] = [];
@@ -1089,15 +1101,15 @@
         console.warn('No available dates for selected class type');
         calendarContainer.innerHTML = '<p class="text-gray-600 text-center">無可用課程日期</p>';
         updateClassCountPrompt();
-        showError('無可用課程日期，請確認試算表「202509恆常班時間表」數據。');
+        showError(`無可用課程日期，請確認試算表「${sheetName}」數據。`);
         return;
       }
 
       updateClassCountPrompt();
 
-      const { septemberDates, octoberDates } = generateCalendarDates();
+      const calendars = generateCalendarDates();
 
-      function createCalendarTable(dates, monthName, tableClass) {
+      function createCalendarTable(dates, monthName, monthIndex) {
         console.log('Creating calendar table for:', monthName);
         const weeks = [];
         let week = [];
@@ -1128,10 +1140,10 @@
 
         const title = document.createElement('div');
         title.className = 'calendar-title';
-        title.textContent = `2025年${monthName}`;
+        title.textContent = `${year}年${monthName}月`;
 
         const table = document.createElement('table');
-        table.className = `calendar-table ${tableClass}`;
+        table.className = `calendar-table month-${monthIndex}`;
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
         ['一', '二', '三', '四', '五', '六', '日'].forEach((day, index) => {
@@ -1235,8 +1247,9 @@
         calendarContainer.appendChild(table);
       }
 
-      createCalendarTable(septemberDates, '9月', 'september');
-      createCalendarTable(octoberDates, '10月', 'october');
+      calendars.forEach(({ month, dates, index }) => {
+        createCalendarTable(dates, month, index);
+      });
     }
 
     const form = document.getElementById('registrationForm');
