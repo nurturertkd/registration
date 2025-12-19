@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>培匠跆拳道班報名表</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .shadow-custom {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div class="container mx-auto p-4 max-w-4xl flex-grow">
+        <h1 class="text-3xl font-bold text-blue-800 mb-6 text-center">培匠跆拳道班報名表</h1>
+        
+        <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert"></div>
+        
+        <div id="loading" class="text-center text-blue-600 py-10">載入課程資料中，請稍候...</div>
+        
+        <div id="form" class="hidden">
+            <!-- 步驟1: 基本資料 -->
+            <div class="mb-6 bg-white p-6 rounded-lg shadow-custom">
+                <h2 class="text-xl font-bold text-blue-700 mb-4">步驟1: 填寫基本資料</h2>
+                <label class="block mb-2 text-blue-800">學員中文姓名</label>
+                <input id="name" type="text" class="w-full border border-blue-300 rounded p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block mb-2 text-blue-800">聯絡電話 (WhatsApp 用)</label>
+                <input id="phone" type="tel" class="w-full border border-blue-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- 步驟2: 選擇班別 -->
+            <div class="mb-6 bg-white p-6 rounded-lg shadow-custom">
+                <h2 class="text-xl font-bold text-blue-700 mb-4">步驟2: 選擇班別</h2>
+                <div id="classButtons" class="flex flex-wrap justify-center gap-4"></div>
+            </div>
+            
+            <!-- 步驟3: 月曆選擇 -->
+            <div id="calendarSection" class="hidden mb-6 bg-white p-6 rounded-lg shadow-custom">
+                <h2 id="currentClass" class="text-xl font-bold text-blue-700 mb-4"></h2>
+                <div class="flex justify-center mb-4">
+                    <button onclick="showMonth('01')" class="m-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all">1月</button>
+                    <button onclick="showMonth('02')" class="m-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all">2月</button>
+                </div>
+                <div id="calendar" class="overflow-x-auto"></div>
+            </div>
+            
+            <!-- 操作按鈕 -->
+            <div class="flex flex-wrap justify-center gap-4 mb-6">
+                <button onclick="clearSelected()" class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-medium shadow hover:bg-yellow-600 transition-all">清除已選課程</button>
+                <button onclick="clearForm()" class="px-6 py-3 bg-red-500 text-white rounded-lg font-medium shadow hover:bg-red-600 transition-all">清除整個表單</button>
+                <button onclick="showConfirmModal()" class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium shadow hover:bg-green-700 transition-all">確認並提交</button>
+            </div>
+        </div>
+        
+        <!-- 浮動計數器 -->
+        <div id="selectedCounter" class="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center cursor-pointer shadow-2xl text-xl font-bold hover:bg-blue-700 transition-all">0</div>
+        
+        <!-- 已選課程模態 -->
+        <div id="selectedModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white p-8 rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+                <h2 class="text-2xl font-bold text-blue-700 mb-6">已選課程</h2>
+                <div id="selectedContent" class="mb-6"></div>
+                <button onclick="closeSelectedModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all">關閉</button>
+            </div>
+        </div>
+        
+        <!-- 確認頁面模態 -->
+        <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white p-8 rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+                <h2 class="text-2xl font-bold text-blue-700 mb-6">確認報名資料</h2>
+                <div id="confirmContent" class="mb-6"></div>
+                <div class="flex justify-end gap-4">
+                    <button onclick="closeConfirmModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-all">取消</button>
+                    <button id="submitBtn" onclick="submitForm()" class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all">提交</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 感謝頁面 -->
+        <div id="thankYou" class="hidden text-center py-20">
+            <h2 class="text-4xl font-bold text-blue-700 mb-6">感謝您的報名！</h2>
+            <p class="text-xl text-blue-600 mb-10">我們會盡快透過 WhatsApp 與您聯繫確認。</p>
+            <button onclick="resetAll()" class="px-8 py-4 bg-blue-600 text-white text-lg rounded-lg font-medium hover:bg-blue-700 transition-all">重新報名</button>
+        </div>
+    </div>
+    
+    <footer class="text-center text-blue-600 py-6 mt-auto">
+        版本 1.5 - 更新日期：2025年12月19日（完全支援 Google Sheets 日期序列號格式）
+    </footer>
+    
+    <script>
+        const spreadsheetId = '1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU';
+        const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSe0kOPO9hkI1TmXDOGEMSonsd79Lu5Cenam3qqexGpKctcaDw/formResponse';
+        const year = 2026;
+        const months = ['01', '02'];
+        let scheduleData = {};
+        let classTypes = [];
+        let selected = [];
+        let currentClass = '';
+        let currentMonth = '01';
+
+        // Google Sheets 日期序列號轉 YYYY-MM-DD
+        function serialToDate(serial) {
+            if (typeof serial !== 'number') return null;
+            const utc_days = Math.floor(serial - 25569);
+            const utc_value = utc_days * 86400 * 1000;
+            const date_info = new Date(utc_value);
+            const fractional_day = serial - Math.floor(serial) + 0.0000001;
+            let total_seconds = Math.floor(86400 * fractional_day);
+            const seconds = total_seconds % 60;
+            total_seconds -= seconds;
+            const hours = Math.floor(total_seconds / (60 * 60));
+            const minutes = Math.floor(total_seconds / 60) % 60;
+            date_info.setUTCHours(hours);
+            date_info.setUTCMinutes(minutes);
+            date_info.setUTCSeconds(seconds);
+            return `${date_info.getFullYear()}-${(date_info.getMonth() + 1).toString().padStart(2, '0')}-${date_info.getDate().toString().padStart(2, '0')}`;
+        }
+
+        async function init() {
+            console.log('開始載入課程資料...');
+            try {
+                await loadSheet();
+                classTypes = [...new Set(Object.keys(scheduleData))];
+                classTypes.sort();
+                renderClassButtons();
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('form').classList.remove('hidden');
+                document.getElementById('selectedCounter').onclick = showSelectedModal;
+                console.log('資料載入完成', scheduleData);
+            } catch (e) {
+                showError('載入課程資料失敗，請稍後再試。<br>錯誤：' + e.message);
+                console.error('載入錯誤:', e);
+            }
+        }
+
+        async function loadSheet() {
+            const sheetName = '202601恆常班時間表';
+            const encodedSheet = encodeURIComponent(sheetName);
+            const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${encodedSheet}`;
+            console.log(`載入 ${sheetName}...`);
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('網路錯誤 ' + response.status);
+            const text = await response.text();
+            
+            const cleaned = text.replace(/.*google\.visualization\.Query\.setResponse\(/s, '').replace(/\);?$/, '');
+            const data = JSON.parse(cleaned);
+            
+            const cols = data.table.cols;
+            console.log('欄位數:', cols.length);
+            
+            data.table.rows.forEach(row => {
+                const cells = row.c || [];
+                if (cells.length < 5) return;
+                
+                const classType = cells[0]?.v?.trim() || '';
+                if (!classType) return;
+                
+                if (!scheduleData[classType]) scheduleData[classType] = { dates: {} };
+                
+                const weekday = cells[1]?.v?.trim() || '';
+                const timeSlot = cells[2]?.v?.trim() || '';
+                const hasStar = (cells[3]?.v?.trim() || '') === '*';
+                const startTime = timeSlot.split('-')[0]?.trim() || timeSlot;
+                
+                for (let i = 4; i < cells.length; i++) {
+                    const cell = cells[i];
+                    if (cell && cell.v != null) {
+                        let dateStr = null;
+                        if (typeof cell.v === 'number') {
+                            // 日期序列號
+                            dateStr = serialToDate(cell.v);
+                        } else if (typeof cell.v === 'string' && cell.v.startsWith('2026-')) {
+                            dateStr = cell.v;
+                        }
+                        if (dateStr && dateStr.startsWith('2026-')) {
+                            if (!scheduleData[classType].dates[dateStr]) scheduleData[classType].dates[dateStr] = [];
+                            scheduleData[classType].dates[dateStr].push({ startTime, fullTime: timeSlot, hasStar, weekday });
+                        }
+                    }
+                }
+            });
+            
+            console.log('解析完成，班別：', Object.keys(scheduleData));
+        }
+
+        // 以下函數與之前相同（renderClassButtons, showMonth, renderCalendar, toggleSelect 等）
+        // 為節省篇幅，此處保持不變，但實際請完整複製前版所有函數
+
+        function renderClassButtons() {
+            const div = document.getElementById('classButtons');
+            div.innerHTML = '';
+            if (classTypes.length === 0) {
+                div.innerHTML = '<p class="text-red-600 text-lg">無班別資料，請檢查試算表。</p>';
+                return;
+            }
+            classTypes.forEach(ct => {
+                const btn = document.createElement('button');
+                btn.textContent = ct;
+                btn.classList.add('px-8', 'py-4', 'text-lg', 'bg-blue-600', 'text-white', 'rounded-xl', 'font-medium', 'shadow', 'hover:bg-blue-700', 'transition-all');
+                btn.onclick = () => {
+                    currentClass = ct;
+                    document.getElementById('currentClass').textContent = `選擇課程：${ct}`;
+                    document.getElementById('calendarSection').classList.remove('hidden');
+                    showMonth(currentMonth);
+                };
+                div.appendChild(btn);
+            });
+        }
+
+        function showMonth(month) {
+            currentMonth = month;
+            renderCalendar(month);
+        }
+
+        function renderCalendar(month) {
+            const calendarDiv = document.getElementById('calendar');
+            calendarDiv.innerHTML = '';
+            
+            const numDays = new Date(year, parseInt(month), 0).getDate();
+            const firstDay = new Date(`${year}-${month}-01`).getDay();
+            
+            const table = document.createElement('table');
+            table.classList.add('w-full', 'table-auto', 'border-collapse', 'bg-white', 'rounded-lg', 'shadow');
+            
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            let header = '<thead><tr class="bg-blue-600 text-white">';
+            weekdays.forEach(d => header += `<th class="p-3 text-center">${d}</th>`);
+            header += '</tr></thead>';
+            table.innerHTML = header + '<tbody>';
+            
+            let row = document.createElement('tr');
+            for (let i = 0; i < firstDay; i++) {
+                row.innerHTML += '<td class="border border-gray-300 p-4"></td>';
+            }
+            
+            for (let day = 1; day <= numDays; day++) {
+                const fullDate = `${year}-${month}-${day.toString().padStart(2, '0')}`;
+                const td = document.createElement('td');
+                td.classList.add('border', 'border-gray-300', 'p-4', 'align-top', 'min-h-32');
+                td.innerHTML = `<div class="font-bold text-lg mb-2">${day}</div>`;
+                
+                const slots = (scheduleData[currentClass]?.dates[fullDate] || []).sort((a, b) => a.startTime.localeCompare(b.startTime));
+                if (slots.length > 0) {
+                    const slotDiv = document.createElement('div');
+                    slotDiv.classList.add('flex', 'flex-col', 'gap-2');
+                    slots.forEach(slot => {
+                        const btn = document.createElement('button');
+                        btn.textContent = `${slot.startTime}${slot.hasStar ? '*' : ''}`;
+                        const isSelected = selected.some(s => s.classType === currentClass && s.date === fullDate && s.fullTime === slot.fullTime);
+                        btn.classList.add('px-3', 'py-2', 'rounded-lg', 'text-white', 'font-medium', isSelected ? 'bg-green-600' : 'bg-blue-500', 'hover:opacity-90', 'transition-all');
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            toggleSelect(currentClass, fullDate, slot);
+                        };
+                        slotDiv.appendChild(btn);
+                    });
+                    td.appendChild(slotDiv);
+                }
+                row.appendChild(td);
+                
+                if ((day + firstDay) % 7 === 0) {
+                    table.querySelector('tbody').appendChild(row);
+                    row = document.createElement('tr');
+                }
+            }
+            if (row.children.length > 0) {
+                table.querySelector('tbody').appendChild(row);
+            }
+            calendarDiv.appendChild(table);
+        }
+
+        function toggleSelect(classType, date, slot) {
+            const item = { classType, date, startTime: slot.startTime, fullTime: slot.fullTime, hasStar: slot.hasStar, weekday: slot.weekday };
+            const index = selected.findIndex(s => s.classType === classType && s.date === date && s.fullTime === slot.fullTime);
+            if (index > -1) {
+                selected.splice(index, 1);
+            } else {
+                selected.push(item);
+            }
+            updateCounter();
+            renderCalendar(currentMonth);
+        }
+
+        function updateCounter() {
+            document.getElementById('selectedCounter').textContent = selected.length;
+        }
+
+        function showSelectedModal() {
+            const content = document.getElementById('selectedContent');
+            content.innerHTML = '';
+            if (selected.length === 0) {
+                content.innerHTML = '<p class="text-gray-600 text-lg">尚未選擇任何課程。</p>';
+            } else {
+                const groups = {};
+                selected.forEach(s => {
+                    if (!groups[s.classType]) groups[s.classType] = {};
+                    if (!groups[s.classType][s.weekday]) groups[s.classType][s.weekday] = {};
+                    const month = s.date.split('-')[1];
+                    if (!groups[s.classType][s.weekday][month]) groups[s.classType][s.weekday][month] = [];
+                    groups[s.classType][s.weekday][month].push(s);
+                });
+                Object.keys(groups).sort().forEach(classType => {
+                    const classDiv = document.createElement('div');
+                    classDiv.classList.add('mb-6', 'p-4', 'bg-blue-50', 'rounded-lg');
+                    classDiv.innerHTML = `<h3 class="font-bold text-xl text-blue-800 mb-3">${classType}</h3>`;
+                    Object.keys(groups[classType]).sort().forEach(weekday => {
+                        const weekDiv = document.createElement('div');
+                        weekDiv.classList.add('ml-4', 'mb-3');
+                        weekDiv.innerHTML = `<h4 class="font-semibold text-blue-600">${weekday}</h4>`;
+                        Object.keys(groups[classType][weekday]).sort().forEach(m => {
+                            groups[classType][weekday][m].sort((a,b) => a.date.localeCompare(b.date)).forEach(s => {
+                                const day = s.date.split('-')[2];
+                                weekDiv.innerHTML += `<div class="ml-4 py-1">${m}月${day}日 ${s.fullTime}${s.hasStar ? ' *' : ''} <button class="ml-3 text-red-600 underline text-sm" onclick="removeSelected('${s.classType}','${s.date}','${s.fullTime}')">取消</button></div>`;
+                            });
+                        });
+                        classDiv.appendChild(weekDiv);
+                    });
+                    content.appendChild(classDiv);
+                });
+            }
+            document.getElementById('selectedModal').classList.remove('hidden');
+        }
+
+        function closeSelectedModal() {
+            document.getElementById('selectedModal').classList.add('hidden');
+        }
+
+        function removeSelected(classType, date, fullTime) {
+            selected = selected.filter(s => !(s.classType === classType && s.date === date && s.fullTime === fullTime));
+            updateCounter();
+            showSelectedModal();
+            if (currentClass) renderCalendar(currentMonth);
+        }
+
+        function showConfirmModal() {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            if (!name || !phone) return showError('請填寫姓名與聯絡電話');
+            if (selected.length === 0) return showError('請至少選擇一堂課程');
+            
+            renderConfirmContent();
+            document.getElementById('submitBtn').textContent = '提交';
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function renderConfirmContent() {
+            const content = document.getElementById('confirmContent');
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const total = selected.length;
+            const classes = [...new Set(selected.map(s => s.classType))].join('、');
+            content.innerHTML = `
+                <p class="mb-3 text-lg"><strong>姓名：</strong>${name}</p>
+                <p class="mb-3 text-lg"><strong>電話：</strong>${phone}</p>
+                <p class="mb-3 text-lg"><strong>報名班別：</strong>${classes}</p>
+                <p class="mb-4 text-xl font-bold text-blue-700">總堂數：共 ${total} 堂</p>
+                <h3 class="font-bold text-blue-800 mb-3">詳細課程清單：</h3>
+                <ul class="list-disc ml-8 space-y-2">
+            `;
+            selected.sort((a,b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))
+                .forEach(s => {
+                    const displayDate = s.date.replace('2026-01-', '1月').replace('2026-02-', '2月') + '日';
+                    content.innerHTML += `<li class="py-1">${displayDate} ${s.fullTime} (${s.classType})${s.hasStar ? ' *' : ''} <button class="ml-4 text-red-600 underline" onclick="removeFromConfirm('${s.classType}','${s.date}','${s.fullTime}')">取消此堂</button></li>`;
+                });
+            content.innerHTML += '</ul>';
+        }
+
+        function removeFromConfirm(classType, date, fullTime) {
+            removeSelected(classType, date, fullTime);
+            if (selected.length === 0) {
+                closeConfirmModal();
+                showError('已無課程，請重新選擇');
+                return;
+            }
+            document.getElementById('submitBtn').textContent = '確定更改並提交';
+            renderConfirmContent();
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        async function submitForm() {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const classes = [...new Set(selected.map(s => s.classType))].join(',');
+            const total = `共 ${selected.length} 堂`;
+            const details = selected.map(s => {
+                const m = s.date.substring(5,7);
+                const d = s.date.substring(8,10);
+                return `${m}/${d} ${s.fullTime} (${s.classType})${s.hasStar ? ' *' : ''}`;
+            }).join('\n');
+
+            const formData = new URLSearchParams();
+            formData.append('entry.1485466301', name);
+            formData.append('entry.1919163075', phone);
+            formData.append('entry.781986668', classes);
+            formData.append('entry.1451557446', total);
+            formData.append('entry.1595158618', details);
+
+            try {
+                await fetch(formUrl, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors'
+                });
+                document.getElementById('form').classList.add('hidden');
+                document.getElementById('confirmModal').classList.add('hidden');
+                document.getElementById('thankYou').classList.remove('hidden');
+            } catch (e) {
+                showError('提交失敗，請檢查網路');
+                console.error(e);
+            }
+        }
+
+        function clearSelected() {
+            if (confirm('確定清除所有已選課程？')) {
+                selected = [];
+                updateCounter();
+                if (currentClass) renderCalendar(currentMonth);
+            }
+        }
+
+        function clearForm() {
+            if (confirm('確定清除整個表單？')) {
+                document.getElementById('name').value = '';
+                document.getElementById('phone').value = '';
+                selected = [];
+                currentClass = '';
+                updateCounter();
+                document.getElementById('calendarSection').classList.add('hidden');
+            }
+        }
+
+        function resetAll() {
+            clearForm();
+            document.getElementById('thankYou').classList.add('hidden');
+            document.getElementById('form').classList.remove('hidden');
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('error');
+            err.innerHTML = msg;
+            err.classList.remove('hidden');
+            setTimeout(() => err.classList.add('hidden'), 10000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
