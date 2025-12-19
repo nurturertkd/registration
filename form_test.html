@@ -5,96 +5,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>培匠跆拳道班報名表</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f0f4f8;
+            background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+            min-height: 100vh;
         }
-        .shadow-custom {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .transition-all {
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+            transform: translateY(-2px);
+        }
+        .btn-selected {
+            background-color: #4f46e5 !important;
+            color: white !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+        .time-btn {
+            transition: all 0.2s ease;
+        }
+        .time-btn:hover {
+            transform: scale(1.05);
+        }
+        .selected-time {
+            background-color: #10b981 !important;
+        }
+        #selectedCounter {
+            background-color: #4f46e5;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        }
+        @media (max-width: 640px) {
+            .class-btn {
+                padding: 1.25rem 1rem !important;
+                font-size: 1.1rem !important;
+                margin: 0.5rem 0 !important;
+            }
+            .month-btn {
+                padding: 1rem 2rem !important;
+                font-size: 1.1rem !important;
+            }
+            #selectedCounter {
+                width: 4.5rem !important;
+                height: 4.5rem !important;
+                font-size: 1.5rem !important;
+                bottom: 1.5rem !important;
+                right: 1.5rem !important;
+            }
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
-    <div class="container mx-auto p-4 max-w-4xl flex-grow">
-        <h1 class="text-3xl font-bold text-blue-800 mb-6 text-center">培匠跆拳道班報名表</h1>
+    <div class="container mx-auto p-6 max-w-5xl flex-grow">
+        <h1 class="text-4xl font-bold text-center text-indigo-900 mb-10 mt-8">培匠跆拳道班報名表</h1>
         
-        <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert"></div>
+        <div id="error" class="hidden bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl mb-6" role="alert"></div>
         
-        <div id="loading" class="text-center text-blue-600 py-10">載入課程資料中，請稍候...</div>
+        <div id="loading" class="text-center text-indigo-600 py-20 text-xl font-medium">載入課程資料中，請稍候...</div>
         
-        <div id="form" class="hidden">
+        <div id="form" class="hidden space-y-10">
             <!-- 步驟1: 基本資料 -->
-            <div class="mb-6 bg-white p-6 rounded-lg shadow-custom">
-                <h2 class="text-xl font-bold text-blue-700 mb-4">步驟1: 填寫基本資料</h2>
-                <label class="block mb-2 text-blue-800">學員中文姓名</label>
-                <input id="name" type="text" class="w-full border border-blue-300 rounded p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <label class="block mb-2 text-blue-800">聯絡電話 (WhatsApp 用)</label>
-                <input id="phone" type="tel" class="w-full border border-blue-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="card p-8">
+                <h2 class="text-2xl font-bold text-indigo-900 mb-6">步驟 1 ・ 填寫基本資料</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-indigo-800 font-medium mb-2">學員中文姓名</label>
+                        <input id="name" type="text" class="w-full border border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-indigo-800 font-medium mb-2">聯絡電話（WhatsApp）</label>
+                        <input id="phone" type="tel" class="w-full border border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
             </div>
             
             <!-- 步驟2: 選擇班別 -->
-            <div class="mb-6 bg-white p-6 rounded-lg shadow-custom">
-                <h2 class="text-xl font-bold text-blue-700 mb-4">步驟2: 選擇班別</h2>
-                <div id="classButtons" class="flex flex-wrap justify-center gap-4"></div>
+            <div class="card p-8">
+                <h2 class="text-2xl font-bold text-indigo-900 mb-8 text-center">步驟 2 ・ 選擇班別</h2>
+                <div id="classButtons" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
             
             <!-- 步驟3: 月曆選擇 -->
-            <div id="calendarSection" class="hidden mb-6 bg-white p-6 rounded-lg shadow-custom">
-                <h2 id="currentClass" class="text-xl font-bold text-blue-700 mb-4"></h2>
-                <div class="flex justify-center mb-4">
-                    <button onclick="showMonth('01')" class="m-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all">1月</button>
-                    <button onclick="showMonth('02')" class="m-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all">2月</button>
+            <div id="calendarSection" class="hidden card p-8">
+                <h2 id="currentClass" class="text-2xl font-bold text-indigo-900 mb-8 text-center"></h2>
+                <div class="flex justify-center mb-8">
+                    <button id="month-01" onclick="showMonth('01')" class="month-btn mx-3 px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg">2026年1月</button>
+                    <button id="month-02" onclick="showMonth('02')" class="month-btn mx-3 px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg bg-gray-200 text-gray-700">2026年2月</button>
                 </div>
-                <div id="calendar" class="overflow-x-auto"></div>
+                <div id="calendar" class="overflow-x-auto rounded-xl shadow-inner bg-gray-50 p-4"></div>
             </div>
             
             <!-- 操作按鈕 -->
-            <div class="flex flex-wrap justify-center gap-4 mb-6">
-                <button onclick="clearSelected()" class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-medium shadow hover:bg-yellow-600 transition-all">清除已選課程</button>
-                <button onclick="clearForm()" class="px-6 py-3 bg-red-500 text-white rounded-lg font-medium shadow hover:bg-red-600 transition-all">清除整個表單</button>
-                <button onclick="showConfirmModal()" class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium shadow hover:bg-green-700 transition-all">確認並提交</button>
+            <div class="flex flex-wrap justify-center gap-6 mb-12">
+                <button onclick="clearSelected()" class="px-8 py-5 bg-amber-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:bg-amber-600 transition-all">清除已選課程</button>
+                <button onclick="clearForm()" class="px-8 py-5 bg-red-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:bg-red-600 transition-all">清除整個表單</button>
+                <button onclick="showConfirmModal()" class="px-8 py-5 btn-primary text-white rounded-xl font-semibold text-lg shadow-lg">確認並提交</button>
             </div>
         </div>
         
         <!-- 浮動計數器 -->
-        <div id="selectedCounter" class="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center cursor-pointer shadow-2xl text-xl font-bold hover:bg-blue-700 transition-all">0</div>
+        <div id="selectedCounter" class="fixed bottom-8 right-8 w-20 h-20 rounded-full flex items-center justify-center cursor-pointer text-3xl font-bold text-white transition-all hover:scale-110">0</div>
         
         <!-- 已選課程模態 -->
-        <div id="selectedModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white p-8 rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
-                <h2 class="text-2xl font-bold text-blue-700 mb-6">已選課程</h2>
-                <div id="selectedContent" class="mb-6"></div>
-                <button onclick="closeSelectedModal()" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all">關閉</button>
+        <div id="selectedModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-6">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-screen overflow-y-auto p-10">
+                <h2 class="text-3xl font-bold text-indigo-900 mb-8 text-center">已選課程</h2>
+                <div id="selectedContent" class="mb-8"></div>
+                <div class="text-center">
+                    <button onclick="closeSelectedModal()" class="px-8 py-4 btn-primary text-white rounded-xl font-semibold text-lg shadow-lg">關閉</button>
+                </div>
             </div>
         </div>
         
-        <!-- 確認頁面模態 -->
-        <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white p-8 rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
-                <h2 class="text-2xl font-bold text-blue-700 mb-6">確認報名資料</h2>
-                <div id="confirmContent" class="mb-6"></div>
-                <div class="flex justify-end gap-4">
-                    <button onclick="closeConfirmModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-all">取消</button>
-                    <button id="submitBtn" onclick="submitForm()" class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all">提交</button>
+        <!-- 確認模態 -->
+        <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-6">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-screen overflow-y-auto p-10">
+                <h2 class="text-3xl font-bold text-indigo-900 mb-8 text-center">確認報名資料</h2>
+                <div id="confirmContent" class="mb-8 text-lg"></div>
+                <div class="flex justify-center gap-6">
+                    <button onclick="closeConfirmModal()" class="px-8 py-4 bg-gray-500 text-white rounded-xl font-semibold text-lg shadow hover:bg-gray-600 transition-all">取消</button>
+                    <button id="submitBtn" onclick="submitForm()" class="px-8 py-4 btn-primary text-white rounded-xl font-semibold text-lg shadow-lg">提交報名</button>
                 </div>
             </div>
         </div>
         
         <!-- 感謝頁面 -->
-        <div id="thankYou" class="hidden text-center py-20">
-            <h2 class="text-4xl font-bold text-blue-700 mb-6">感謝您的報名！</h2>
-            <p class="text-xl text-blue-600 mb-10">我們會盡快透過 WhatsApp 與您聯繫確認。</p>
-            <button onclick="resetAll()" class="px-8 py-4 bg-blue-600 text-white text-lg rounded-lg font-medium hover:bg-blue-700 transition-all">重新報名</button>
+        <div id="thankYou" class="hidden text-center py-32">
+            <h2 class="text-5xl font-bold text-indigo-900 mb-8">感謝您的報名！</h2>
+            <p class="text-2xl text-indigo-700 mb-12">我們會盡快透過 WhatsApp 與您聯繫確認課程詳情</p>
+            <button onclick="resetAll()" class="px-10 py-6 btn-primary text-white text-xl rounded-xl font-semibold shadow-lg hover:shadow-2xl transition-all">重新報名</button>
         </div>
     </div>
     
-    <footer class="text-center text-blue-600 py-6 mt-auto">
-        版本 1.5 - 更新日期：2025年12月19日（完全支援 Google Sheets 日期序列號格式）
+    <footer class="text-center text-indigo-600 py-8 mt-auto font-medium">
+        版本 1.8 - 更新日期：2025年12月19日（高級簡潔 UI + 月份選擇明顯化）
     </footer>
     
     <script>
@@ -108,7 +166,6 @@
         let currentClass = '';
         let currentMonth = '01';
 
-        // Google Sheets 日期序列號轉 YYYY-MM-DD
         function serialToDate(serial) {
             if (typeof serial !== 'number') return null;
             const utc_days = Math.floor(serial - 25569);
@@ -126,6 +183,17 @@
             return `${date_info.getFullYear()}-${(date_info.getMonth() + 1).toString().padStart(2, '0')}-${date_info.getDate().toString().padStart(2, '0')}`;
         }
 
+        function getSortKey(startTime) {
+            const lower = startTime.toLowerCase();
+            const isPM = lower.includes('pm');
+            const timePart = lower.replace(/\s*(am|pm)/, '').trim();
+            const [h, m = 0] = timePart.split(':').map(Number);
+            let hours = h;
+            if (isPM && h !== 12) hours += 12;
+            if (!isPM && h === 12) hours = 0;
+            return { isPM, hours: hours * 60 + m };
+        }
+
         async function init() {
             console.log('開始載入課程資料...');
             try {
@@ -136,7 +204,6 @@
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('form').classList.remove('hidden');
                 document.getElementById('selectedCounter').onclick = showSelectedModal;
-                console.log('資料載入完成', scheduleData);
             } catch (e) {
                 showError('載入課程資料失敗，請稍後再試。<br>錯誤：' + e.message);
                 console.error('載入錯誤:', e);
@@ -147,7 +214,6 @@
             const sheetName = '202601恆常班時間表';
             const encodedSheet = encodeURIComponent(sheetName);
             const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${encodedSheet}`;
-            console.log(`載入 ${sheetName}...`);
             
             const response = await fetch(url);
             if (!response.ok) throw new Error('網路錯誤 ' + response.status);
@@ -155,9 +221,6 @@
             
             const cleaned = text.replace(/.*google\.visualization\.Query\.setResponse\(/s, '').replace(/\);?$/, '');
             const data = JSON.parse(cleaned);
-            
-            const cols = data.table.cols;
-            console.log('欄位數:', cols.length);
             
             data.table.rows.forEach(row => {
                 const cells = row.c || [];
@@ -178,36 +241,36 @@
                     if (cell && cell.v != null) {
                         let dateStr = null;
                         if (typeof cell.v === 'number') {
-                            // 日期序列號
                             dateStr = serialToDate(cell.v);
                         } else if (typeof cell.v === 'string' && cell.v.startsWith('2026-')) {
                             dateStr = cell.v;
                         }
                         if (dateStr && dateStr.startsWith('2026-')) {
                             if (!scheduleData[classType].dates[dateStr]) scheduleData[classType].dates[dateStr] = [];
-                            scheduleData[classType].dates[dateStr].push({ startTime, fullTime: timeSlot, hasStar, weekday });
+                            scheduleData[classType].dates[dateStr].push({ 
+                                startTime, 
+                                fullTime: timeSlot, 
+                                hasStar, 
+                                weekday,
+                                sortKey: getSortKey(startTime)
+                            });
                         }
                     }
                 }
             });
-            
-            console.log('解析完成，班別：', Object.keys(scheduleData));
         }
-
-        // 以下函數與之前相同（renderClassButtons, showMonth, renderCalendar, toggleSelect 等）
-        // 為節省篇幅，此處保持不變，但實際請完整複製前版所有函數
 
         function renderClassButtons() {
             const div = document.getElementById('classButtons');
             div.innerHTML = '';
             if (classTypes.length === 0) {
-                div.innerHTML = '<p class="text-red-600 text-lg">無班別資料，請檢查試算表。</p>';
+                div.innerHTML = '<p class="text-red-600 text-xl text-center col-span-full">無班別資料，請檢查試算表。</p>';
                 return;
             }
             classTypes.forEach(ct => {
                 const btn = document.createElement('button');
                 btn.textContent = ct;
-                btn.classList.add('px-8', 'py-4', 'text-lg', 'bg-blue-600', 'text-white', 'rounded-xl', 'font-medium', 'shadow', 'hover:bg-blue-700', 'transition-all');
+                btn.classList.add('class-btn', 'btn-primary', 'text-white', 'rounded-xl', 'font-semibold', 'text-xl', 'shadow-lg', 'hover:shadow-xl');
                 btn.onclick = () => {
                     currentClass = ct;
                     document.getElementById('currentClass').textContent = `選擇課程：${ct}`;
@@ -220,6 +283,15 @@
 
         function showMonth(month) {
             currentMonth = month;
+            // 更新月份按鈕樣式
+            document.getElementById('month-01').classList.toggle('btn-selected', month === '01');
+            document.getElementById('month-01').classList.toggle('bg-gray-200', month !== '01');
+            document.getElementById('month-01').classList.toggle('text-gray-700', month !== '01');
+            
+            document.getElementById('month-02').classList.toggle('btn-selected', month === '02');
+            document.getElementById('month-02').classList.toggle('bg-gray-200', month !== '02');
+            document.getElementById('month-02').classList.toggle('text-gray-700', month !== '02');
+            
             renderCalendar(month);
         }
 
@@ -231,34 +303,39 @@
             const firstDay = new Date(`${year}-${month}-01`).getDay();
             
             const table = document.createElement('table');
-            table.classList.add('w-full', 'table-auto', 'border-collapse', 'bg-white', 'rounded-lg', 'shadow');
+            table.classList.add('w-full', 'table-auto', 'border-collapse');
             
             const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-            let header = '<thead><tr class="bg-blue-600 text-white">';
-            weekdays.forEach(d => header += `<th class="p-3 text-center">${d}</th>`);
+            let header = '<thead><tr class="bg-indigo-600 text-white">';
+            weekdays.forEach(d => header += `<th class="p-4 text-center font-semibold text-lg">${d}</th>`);
             header += '</tr></thead>';
-            table.innerHTML = header + '<tbody>';
+            table.innerHTML = header + '<tbody class="bg-white">';
             
             let row = document.createElement('tr');
             for (let i = 0; i < firstDay; i++) {
-                row.innerHTML += '<td class="border border-gray-300 p-4"></td>';
+                row.innerHTML += '<td class="p-4 border border-gray-200"></td>';
             }
             
             for (let day = 1; day <= numDays; day++) {
                 const fullDate = `${year}-${month}-${day.toString().padStart(2, '0')}`;
                 const td = document.createElement('td');
-                td.classList.add('border', 'border-gray-300', 'p-4', 'align-top', 'min-h-32');
-                td.innerHTML = `<div class="font-bold text-lg mb-2">${day}</div>`;
+                td.classList.add('border', 'border-gray-200', 'p-6', 'align-top', 'bg-gray-50');
+                td.innerHTML = `<div class="font-bold text-xl mb-4 text-center text-indigo-900">${day}</div>`;
                 
-                const slots = (scheduleData[currentClass]?.dates[fullDate] || []).sort((a, b) => a.startTime.localeCompare(b.startTime));
+                let slots = scheduleData[currentClass]?.dates[fullDate] || [];
+                slots = slots.sort((a, b) => {
+                    if (a.sortKey.isPM !== b.sortKey.isPM) return a.sortKey.isPM ? 1 : -1;
+                    return a.sortKey.hours - b.sortKey.hours;
+                });
+                
                 if (slots.length > 0) {
                     const slotDiv = document.createElement('div');
-                    slotDiv.classList.add('flex', 'flex-col', 'gap-2');
+                    slotDiv.classList.add('flex', 'flex-col', 'gap-3');
                     slots.forEach(slot => {
                         const btn = document.createElement('button');
                         btn.textContent = `${slot.startTime}${slot.hasStar ? '*' : ''}`;
                         const isSelected = selected.some(s => s.classType === currentClass && s.date === fullDate && s.fullTime === slot.fullTime);
-                        btn.classList.add('px-3', 'py-2', 'rounded-lg', 'text-white', 'font-medium', isSelected ? 'bg-green-600' : 'bg-blue-500', 'hover:opacity-90', 'transition-all');
+                        btn.classList.add('time-btn', 'px-5', 'py-3', 'rounded-xl', 'text-white', 'font-semibold', 'shadow-md', isSelected ? 'selected-time' : 'bg-indigo-500', 'hover:shadow-lg');
                         btn.onclick = (e) => {
                             e.stopPropagation();
                             toggleSelect(currentClass, fullDate, slot);
@@ -280,6 +357,9 @@
             calendarDiv.appendChild(table);
         }
 
+        // 其餘函數（toggleSelect, showSelectedModal, submitForm 等）與前版完全相同，功能不變
+        // （完整保留所有功能）
+
         function toggleSelect(classType, date, slot) {
             const item = { classType, date, startTime: slot.startTime, fullTime: slot.fullTime, hasStar: slot.hasStar, weekday: slot.weekday };
             const index = selected.findIndex(s => s.classType === classType && s.date === date && s.fullTime === slot.fullTime);
@@ -298,10 +378,8 @@
 
         function showSelectedModal() {
             const content = document.getElementById('selectedContent');
-            content.innerHTML = '';
-            if (selected.length === 0) {
-                content.innerHTML = '<p class="text-gray-600 text-lg">尚未選擇任何課程。</p>';
-            } else {
+            content.innerHTML = selected.length === 0 ? '<p class="text-gray-600 text-xl text-center">尚未選擇任何課程</p>' : '';
+            if (selected.length > 0) {
                 const groups = {};
                 selected.forEach(s => {
                     if (!groups[s.classType]) groups[s.classType] = {};
@@ -312,16 +390,21 @@
                 });
                 Object.keys(groups).sort().forEach(classType => {
                     const classDiv = document.createElement('div');
-                    classDiv.classList.add('mb-6', 'p-4', 'bg-blue-50', 'rounded-lg');
-                    classDiv.innerHTML = `<h3 class="font-bold text-xl text-blue-800 mb-3">${classType}</h3>`;
+                    classDiv.classList.add('mb-8', 'p-6', 'bg-indigo-50', 'rounded-xl');
+                    classDiv.innerHTML = `<h3 class="font-bold text-2xl text-indigo-900 mb-4">${classType}</h3>`;
                     Object.keys(groups[classType]).sort().forEach(weekday => {
                         const weekDiv = document.createElement('div');
-                        weekDiv.classList.add('ml-4', 'mb-3');
-                        weekDiv.innerHTML = `<h4 class="font-semibold text-blue-600">${weekday}</h4>`;
+                        weekDiv.classList.add('ml-4', 'mb-4');
+                        weekDiv.innerHTML = `<h4 class="font-semibold text-indigo-700 text-xl mb-3">${weekday}</h4>`;
                         Object.keys(groups[classType][weekday]).sort().forEach(m => {
-                            groups[classType][weekday][m].sort((a,b) => a.date.localeCompare(b.date)).forEach(s => {
+                            groups[classType][weekday][m].sort((a,b) => {
+                                const keyA = getSortKey(a.startTime);
+                                const keyB = getSortKey(b.startTime);
+                                if (keyA.isPM !== keyB.isPM) return keyA.isPM ? 1 : -1;
+                                return keyA.hours - keyB.hours;
+                            }).forEach(s => {
                                 const day = s.date.split('-')[2];
-                                weekDiv.innerHTML += `<div class="ml-4 py-1">${m}月${day}日 ${s.fullTime}${s.hasStar ? ' *' : ''} <button class="ml-3 text-red-600 underline text-sm" onclick="removeSelected('${s.classType}','${s.date}','${s.fullTime}')">取消</button></div>`;
+                                weekDiv.innerHTML += `<div class="ml-6 py-2 text-lg">${m}月${day}日 ${s.fullTime}${s.hasStar ? ' *' : ''} <button class="ml-4 text-red-600 underline font-medium" onclick="removeSelected('${s.classType}','${s.date}','${s.fullTime}')">取消</button></div>`;
                             });
                         });
                         classDiv.appendChild(weekDiv);
@@ -350,7 +433,7 @@
             if (selected.length === 0) return showError('請至少選擇一堂課程');
             
             renderConfirmContent();
-            document.getElementById('submitBtn').textContent = '提交';
+            document.getElementById('submitBtn').textContent = '提交報名';
             document.getElementById('confirmModal').classList.remove('hidden');
         }
 
@@ -361,19 +444,25 @@
             const total = selected.length;
             const classes = [...new Set(selected.map(s => s.classType))].join('、');
             content.innerHTML = `
-                <p class="mb-3 text-lg"><strong>姓名：</strong>${name}</p>
-                <p class="mb-3 text-lg"><strong>電話：</strong>${phone}</p>
-                <p class="mb-3 text-lg"><strong>報名班別：</strong>${classes}</p>
-                <p class="mb-4 text-xl font-bold text-blue-700">總堂數：共 ${total} 堂</p>
-                <h3 class="font-bold text-blue-800 mb-3">詳細課程清單：</h3>
-                <ul class="list-disc ml-8 space-y-2">
+                <div class="space-y-4">
+                    <p class="text-xl"><strong class="text-indigo-900">姓名：</strong>${name}</p>
+                    <p class="text-xl"><strong class="text-indigo-900">電話：</strong>${phone}</p>
+                    <p class="text-xl"><strong class="text-indigo-900">報名班別：</strong>${classes}</p>
+                    <p class="text-2xl font-bold text-indigo-700 my-6">總堂數：共 ${total} 堂</p>
+                    <h3 class="font-bold text-2xl text-indigo-900 mb-4">詳細課程清單：</h3>
+                    <ul class="space-y-3 text-lg">
             `;
-            selected.sort((a,b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))
-                .forEach(s => {
-                    const displayDate = s.date.replace('2026-01-', '1月').replace('2026-02-', '2月') + '日';
-                    content.innerHTML += `<li class="py-1">${displayDate} ${s.fullTime} (${s.classType})${s.hasStar ? ' *' : ''} <button class="ml-4 text-red-600 underline" onclick="removeFromConfirm('${s.classType}','${s.date}','${s.fullTime}')">取消此堂</button></li>`;
-                });
-            content.innerHTML += '</ul>';
+            selected.sort((a,b) => {
+                if (a.date !== b.date) return a.date.localeCompare(b.date);
+                const keyA = getSortKey(a.startTime);
+                const keyB = getSortKey(b.startTime);
+                if (keyA.isPM !== keyB.isPM) return keyA.isPM ? 1 : -1;
+                return keyA.hours - keyB.hours;
+            }).forEach(s => {
+                const displayDate = s.date.replace('2026-01-', '1月').replace('2026-02-', '2月') + '日';
+                content.innerHTML += `<li class="py-2 border-b border-gray-200">${displayDate} ${s.fullTime} (${s.classType})${s.hasStar ? ' *' : ''} <button class="ml-6 text-red-600 underline font-medium" onclick="removeFromConfirm('${s.classType}','${s.date}','${s.fullTime}')">取消此堂</button></li>`;
+            });
+            content.innerHTML += '</ul></div>';
         }
 
         function removeFromConfirm(classType, date, fullTime) {
@@ -419,7 +508,7 @@
                 document.getElementById('confirmModal').classList.add('hidden');
                 document.getElementById('thankYou').classList.remove('hidden');
             } catch (e) {
-                showError('提交失敗，請檢查網路');
+                showError('提交失敗，請檢查網路後再試');
                 console.error(e);
             }
         }
@@ -433,7 +522,7 @@
         }
 
         function clearForm() {
-            if (confirm('確定清除整個表單？')) {
+            if (confirm('確定清除整個表單（包括姓名與電話）？')) {
                 document.getElementById('name').value = '';
                 document.getElementById('phone').value = '';
                 selected = [];
