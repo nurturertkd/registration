@@ -116,9 +116,8 @@
         <div id="loading" class="text-center text-indigo-600 py-20 text-xl font-medium">載入課程資料中，請稍候...</div>
         
         <div id="form" class="hidden space-y-10">
-            <!-- 步驟1: 基本資料 -->
+            <!-- 基本資料 -->
             <div class="card p-8">
-                <h2 class="text-2xl font-bold text-indigo-900 mb-6">步驟 1 ・ 填寫基本資料</h2>
                 <div class="space-y-6">
                     <div>
                         <label class="block text-indigo-800 font-medium mb-2">學員中文姓名</label>
@@ -131,13 +130,13 @@
                 </div>
             </div>
             
-            <!-- 步驟2: 選擇班別 -->
+            <!-- 選擇班別 -->
             <div class="card p-8">
-                <h2 class="text-2xl font-bold text-indigo-900 mb-8 text-center">步驟 2 ・ 選擇班別</h2>
+                <h2 class="text-2xl font-bold text-indigo-900 mb-8 text-center">選擇班別</h2>
                 <div id="classButtons" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
             
-            <!-- 步驟3: 月曆選擇 -->
+            <!-- 月曆選擇 -->
             <div id="calendarSection" class="hidden card p-8">
                 <h2 id="currentClass" class="text-2xl font-bold text-indigo-900 mb-8 text-center"></h2>
                 <div class="flex justify-center mb-8">
@@ -150,7 +149,6 @@
             <!-- 操作按鈕 -->
             <div class="flex flex-wrap justify-center gap-6 mb-12">
                 <button onclick="clearSelected()" class="operation-btn px-8 py-5 bg-amber-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:bg-amber-600 transition-all">清除已選課程</button>
-                <button onclick="clearForm()" class="operation-btn px-8 py-5 bg-red-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:bg-red-600 transition-all">清除整個表單</button>
                 <button onclick="showConfirmModal()" class="operation-btn px-8 py-5 btn-primary text-white rounded-xl font-semibold text-lg shadow-lg">確認並提交</button>
             </div>
         </div>
@@ -190,7 +188,7 @@
     </div>
     
     <footer class="text-center text-indigo-600 py-8 mt-auto font-medium">
-        版本 1.9 - 更新日期：2025年12月20日（手機版緊湊優化，減少滾動）
+        版本 1.10 - 更新日期：2025年12月20日（移除清除整個表單、步驟文字；班別選擇高亮）
     </footer>
     
     <script>
@@ -309,14 +307,25 @@
                 return;
             }
             classTypes.forEach(ct => {
+                const btnId = 'class-' + ct.replace(/[^a-zA-Z0-9]/g, '-');
                 const btn = document.createElement('button');
+                btn.id = btnId;
                 btn.textContent = ct;
-                btn.classList.add('class-btn', 'btn-primary', 'text-white', 'rounded-xl', 'font-medium', 'shadow', 'hover:shadow-xl', 'transition-all');
+                btn.classList.add('class-btn', 'bg-gray-200', 'text-gray-700', 'rounded-xl', 'font-medium', 'shadow', 'hover:shadow-xl', 'transition-all');
                 btn.onclick = () => {
                     currentClass = ct;
                     document.getElementById('currentClass').textContent = `選擇課程：${ct}`;
                     document.getElementById('calendarSection').classList.remove('hidden');
                     showMonth(currentMonth);
+                    // 高亮選擇的班別
+                    document.querySelectorAll('.class-btn').forEach(b => {
+                        b.classList.remove('btn-selected');
+                        b.classList.add('bg-gray-200');
+                        b.classList.add('text-gray-700');
+                    });
+                    btn.classList.add('btn-selected');
+                    btn.classList.remove('bg-gray-200');
+                    btn.classList.remove('text-gray-700');
                 };
                 div.appendChild(btn);
             });
@@ -549,19 +558,19 @@
             }
         }
 
-        function clearForm() {
-            if (confirm('確定清除整個表單嗎？')) {
-                document.getElementById('name').value = '';
-                document.getElementById('phone').value = '';
-                selected = [];
-                updateCounter();
-                currentClass = '';
-                document.getElementById('calendarSection').classList.add('hidden');
-            }
-        }
-
         function resetAll() {
-            clearForm();
+            selected = [];
+            updateCounter();
+            currentClass = '';
+            document.getElementById('name').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('calendarSection').classList.add('hidden');
+            // 重置班別高亮
+            document.querySelectorAll('.class-btn').forEach(b => {
+                b.classList.remove('btn-selected');
+                b.classList.add('bg-gray-200');
+                b.classList.add('text-gray-700');
+            });
             document.getElementById('thankYou').classList.add('hidden');
             document.getElementById('form').classList.remove('hidden');
         }
