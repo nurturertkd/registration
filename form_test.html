@@ -49,29 +49,67 @@
             background-color: #4f46e5;
             box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
         }
+        /* 手機優化：緊湊設計，減少滾動 */
         @media (max-width: 640px) {
+            .container {
+                padding: 1rem !important;
+            }
+            .card {
+                padding: 1.5rem !important;
+            }
+            h1 {
+                font-size: 1.5rem !important;
+                margin-bottom: 1rem !important;
+            }
+            h2 {
+                font-size: 1.25rem !important;
+                margin-bottom: 1rem !important;
+            }
+            input {
+                padding: 0.75rem !important;
+                font-size: 1rem !important;
+            }
             .class-btn {
-                padding: 1.25rem 1rem !important;
-                font-size: 1.1rem !important;
-                margin: 0.5rem 0 !important;
+                padding: 0.75rem 1rem !important;
+                font-size: 1rem !important;
+            }
+            #classButtons {
+                gap: 0.5rem !important;
+                grid-template-columns: 1fr !important; /* 單列垂直排列 */
             }
             .month-btn {
-                padding: 1rem 2rem !important;
-                font-size: 1.1rem !important;
+                padding: 0.75rem 1.5rem !important;
+                font-size: 1rem !important;
+            }
+            #calendar td {
+                padding: 0.5rem !important;
+                min-height: auto !important;
+            }
+            #calendar .font-bold {
+                font-size: 1rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            .time-btn {
+                padding: 0.5rem !important;
+                font-size: 0.875rem !important;
             }
             #selectedCounter {
-                width: 4.5rem !important;
-                height: 4.5rem !important;
-                font-size: 1.5rem !important;
-                bottom: 1.5rem !important;
-                right: 1.5rem !important;
+                bottom: 1rem !important;
+                right: 1rem !important;
+                width: 3rem !important;
+                height: 3rem !important;
+                font-size: 1.25rem !important;
+            }
+            .operation-btn {
+                padding: 1rem !important;
+                font-size: 1rem !important;
             }
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
     <div class="container mx-auto p-6 max-w-5xl flex-grow">
-        <h1 class="text-4xl font-bold text-center text-indigo-900 mb-10 mt-8">培匠跆拳道班報名表</h1>
+        <h1 class="text-3xl font-bold text-center text-indigo-900 mb-10 mt-8">培匠跆拳道班報名表</h1>
         
         <div id="error" class="hidden bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl mb-6" role="alert"></div>
         
@@ -111,9 +149,9 @@
             
             <!-- 操作按鈕 -->
             <div class="flex flex-wrap justify-center gap-6 mb-12">
-                <button onclick="clearSelected()" class="px-8 py-5 bg-amber-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:bg-amber-600 transition-all">清除已選課程</button>
-                <button onclick="clearForm()" class="px-8 py-5 bg-red-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:bg-red-600 transition-all">清除整個表單</button>
-                <button onclick="showConfirmModal()" class="px-8 py-5 btn-primary text-white rounded-xl font-semibold text-lg shadow-lg">確認並提交</button>
+                <button onclick="clearSelected()" class="operation-btn px-8 py-5 bg-amber-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:bg-amber-600 transition-all">清除已選課程</button>
+                <button onclick="clearForm()" class="operation-btn px-8 py-5 bg-red-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:bg-red-600 transition-all">清除整個表單</button>
+                <button onclick="showConfirmModal()" class="operation-btn px-8 py-5 btn-primary text-white rounded-xl font-semibold text-lg shadow-lg">確認並提交</button>
             </div>
         </div>
         
@@ -152,7 +190,7 @@
     </div>
     
     <footer class="text-center text-indigo-600 py-8 mt-auto font-medium">
-        版本 1.8 - 更新日期：2025年12月19日（高級簡潔 UI + 月份選擇明顯化）
+        版本 1.9 - 更新日期：2025年12月20日（手機版緊湊優化，減少滾動）
     </footer>
     
     <script>
@@ -166,6 +204,7 @@
         let currentClass = '';
         let currentMonth = '01';
 
+        // Google Sheets 日期序列號轉 YYYY-MM-DD
         function serialToDate(serial) {
             if (typeof serial !== 'number') return null;
             const utc_days = Math.floor(serial - 25569);
@@ -183,6 +222,7 @@
             return `${date_info.getFullYear()}-${(date_info.getMonth() + 1).toString().padStart(2, '0')}-${date_info.getDate().toString().padStart(2, '0')}`;
         }
 
+        // 時間排序用：先分 am/pm，再比時間早晚
         function getSortKey(startTime) {
             const lower = startTime.toLowerCase();
             const isPM = lower.includes('pm');
@@ -204,6 +244,7 @@
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('form').classList.remove('hidden');
                 document.getElementById('selectedCounter').onclick = showSelectedModal;
+                console.log('資料載入完成', scheduleData);
             } catch (e) {
                 showError('載入課程資料失敗，請稍後再試。<br>錯誤：' + e.message);
                 console.error('載入錯誤:', e);
@@ -264,13 +305,13 @@
             const div = document.getElementById('classButtons');
             div.innerHTML = '';
             if (classTypes.length === 0) {
-                div.innerHTML = '<p class="text-red-600 text-xl text-center col-span-full">無班別資料，請檢查試算表。</p>';
+                div.innerHTML = '<p class="text-red-600 text-lg text-center col-span-full">無班別資料，請檢查試算表。</p>';
                 return;
             }
             classTypes.forEach(ct => {
                 const btn = document.createElement('button');
                 btn.textContent = ct;
-                btn.classList.add('class-btn', 'btn-primary', 'text-white', 'rounded-xl', 'font-semibold', 'text-xl', 'shadow-lg', 'hover:shadow-xl');
+                btn.classList.add('class-btn', 'btn-primary', 'text-white', 'rounded-xl', 'font-medium', 'shadow', 'hover:shadow-xl', 'transition-all');
                 btn.onclick = () => {
                     currentClass = ct;
                     document.getElementById('currentClass').textContent = `選擇課程：${ct}`;
@@ -283,7 +324,6 @@
 
         function showMonth(month) {
             currentMonth = month;
-            // 更新月份按鈕樣式
             document.getElementById('month-01').classList.toggle('btn-selected', month === '01');
             document.getElementById('month-01').classList.toggle('bg-gray-200', month !== '01');
             document.getElementById('month-01').classList.toggle('text-gray-700', month !== '01');
@@ -307,20 +347,20 @@
             
             const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
             let header = '<thead><tr class="bg-indigo-600 text-white">';
-            weekdays.forEach(d => header += `<th class="p-4 text-center font-semibold text-lg">${d}</th>`);
+            weekdays.forEach(d => header += `<th class="p-2 text-center font-semibold text-base">${d}</th>`);
             header += '</tr></thead>';
             table.innerHTML = header + '<tbody class="bg-white">';
             
             let row = document.createElement('tr');
             for (let i = 0; i < firstDay; i++) {
-                row.innerHTML += '<td class="p-4 border border-gray-200"></td>';
+                row.innerHTML += '<td class="p-2 border border-gray-200"></td>';
             }
             
             for (let day = 1; day <= numDays; day++) {
                 const fullDate = `${year}-${month}-${day.toString().padStart(2, '0')}`;
                 const td = document.createElement('td');
-                td.classList.add('border', 'border-gray-200', 'p-6', 'align-top', 'bg-gray-50');
-                td.innerHTML = `<div class="font-bold text-xl mb-4 text-center text-indigo-900">${day}</div>`;
+                td.classList.add('border', 'border-gray-200', 'p-2', 'align-top', 'bg-gray-50');
+                td.innerHTML = `<div class="font-bold text-base mb-2 text-center text-indigo-900">${day}</div>`;
                 
                 let slots = scheduleData[currentClass]?.dates[fullDate] || [];
                 slots = slots.sort((a, b) => {
@@ -330,12 +370,12 @@
                 
                 if (slots.length > 0) {
                     const slotDiv = document.createElement('div');
-                    slotDiv.classList.add('flex', 'flex-col', 'gap-3');
+                    slotDiv.classList.add('flex', 'flex-col', 'gap-1');
                     slots.forEach(slot => {
                         const btn = document.createElement('button');
                         btn.textContent = `${slot.startTime}${slot.hasStar ? '*' : ''}`;
                         const isSelected = selected.some(s => s.classType === currentClass && s.date === fullDate && s.fullTime === slot.fullTime);
-                        btn.classList.add('time-btn', 'px-5', 'py-3', 'rounded-xl', 'text-white', 'font-semibold', 'shadow-md', isSelected ? 'selected-time' : 'bg-indigo-500', 'hover:shadow-lg');
+                        btn.classList.add('time-btn', 'px-3', 'py-1', 'rounded-lg', 'text-white', 'font-medium', 'shadow-md', isSelected ? 'selected-time' : 'bg-indigo-500', 'hover:shadow-lg');
                         btn.onclick = (e) => {
                             e.stopPropagation();
                             toggleSelect(currentClass, fullDate, slot);
@@ -357,9 +397,6 @@
             calendarDiv.appendChild(table);
         }
 
-        // 其餘函數（toggleSelect, showSelectedModal, submitForm 等）與前版完全相同，功能不變
-        // （完整保留所有功能）
-
         function toggleSelect(classType, date, slot) {
             const item = { classType, date, startTime: slot.startTime, fullTime: slot.fullTime, hasStar: slot.hasStar, weekday: slot.weekday };
             const index = selected.findIndex(s => s.classType === classType && s.date === date && s.fullTime === slot.fullTime);
@@ -378,8 +415,10 @@
 
         function showSelectedModal() {
             const content = document.getElementById('selectedContent');
-            content.innerHTML = selected.length === 0 ? '<p class="text-gray-600 text-xl text-center">尚未選擇任何課程</p>' : '';
-            if (selected.length > 0) {
+            content.innerHTML = '';
+            if (selected.length === 0) {
+                content.innerHTML = '<p class="text-gray-600 text-lg">尚未選擇任何課程。</p>';
+            } else {
                 const groups = {};
                 selected.forEach(s => {
                     if (!groups[s.classType]) groups[s.classType] = {};
@@ -390,7 +429,7 @@
                 });
                 Object.keys(groups).sort().forEach(classType => {
                     const classDiv = document.createElement('div');
-                    classDiv.classList.add('mb-8', 'p-6', 'bg-indigo-50', 'rounded-xl');
+                    classDiv.classList.add('mb-6', 'p-4', 'bg-indigo-50', 'rounded-xl');
                     classDiv.innerHTML = `<h3 class="font-bold text-2xl text-indigo-900 mb-4">${classType}</h3>`;
                     Object.keys(groups[classType]).sort().forEach(weekday => {
                         const weekDiv = document.createElement('div');
@@ -433,7 +472,7 @@
             if (selected.length === 0) return showError('請至少選擇一堂課程');
             
             renderConfirmContent();
-            document.getElementById('submitBtn').textContent = '提交報名';
+            document.getElementById('submitBtn').textContent = '提交';
             document.getElementById('confirmModal').classList.remove('hidden');
         }
 
@@ -444,25 +483,18 @@
             const total = selected.length;
             const classes = [...new Set(selected.map(s => s.classType))].join('、');
             content.innerHTML = `
-                <div class="space-y-4">
-                    <p class="text-xl"><strong class="text-indigo-900">姓名：</strong>${name}</p>
-                    <p class="text-xl"><strong class="text-indigo-900">電話：</strong>${phone}</p>
-                    <p class="text-xl"><strong class="text-indigo-900">報名班別：</strong>${classes}</p>
-                    <p class="text-2xl font-bold text-indigo-700 my-6">總堂數：共 ${total} 堂</p>
-                    <h3 class="font-bold text-2xl text-indigo-900 mb-4">詳細課程清單：</h3>
-                    <ul class="space-y-3 text-lg">
+                <p class="mb-3 text-lg"><strong class="text-indigo-900">姓名：</strong>${name}</p>
+                <p class="mb-3 text-lg"><strong class="text-indigo-900">電話：</strong>${phone}</p>
+                <p class="mb-3 text-lg"><strong class="text-indigo-900">報名班別：</strong>${classes}</p>
+                <p class="mb-4 text-xl font-bold text-indigo-700">總堂數：共 ${total} 堂</p>
+                <h3 class="font-bold text-indigo-800 mb-3 text-xl">詳細課程清單：</h3>
+                <ul class="list-disc ml-8 space-y-2 text-lg">
             `;
-            selected.sort((a,b) => {
-                if (a.date !== b.date) return a.date.localeCompare(b.date);
-                const keyA = getSortKey(a.startTime);
-                const keyB = getSortKey(b.startTime);
-                if (keyA.isPM !== keyB.isPM) return keyA.isPM ? 1 : -1;
-                return keyA.hours - keyB.hours;
-            }).forEach(s => {
+            selected.sort((a,b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)).forEach(s => {
                 const displayDate = s.date.replace('2026-01-', '1月').replace('2026-02-', '2月') + '日';
-                content.innerHTML += `<li class="py-2 border-b border-gray-200">${displayDate} ${s.fullTime} (${s.classType})${s.hasStar ? ' *' : ''} <button class="ml-6 text-red-600 underline font-medium" onclick="removeFromConfirm('${s.classType}','${s.date}','${s.fullTime}')">取消此堂</button></li>`;
+                content.innerHTML += `<li>${displayDate} ${s.fullTime} (${s.classType})${s.hasStar ? ' *' : ''} <button class="ml-4 text-red-600 underline" onclick="removeFromConfirm('${s.classType}','${s.date}','${s.fullTime}')">取消此堂</button></li>`;
             });
-            content.innerHTML += '</ul></div>';
+            content.innerHTML += '</ul>';
         }
 
         function removeFromConfirm(classType, date, fullTime) {
@@ -485,11 +517,7 @@
             const phone = document.getElementById('phone').value.trim();
             const classes = [...new Set(selected.map(s => s.classType))].join(',');
             const total = `共 ${selected.length} 堂`;
-            const details = selected.map(s => {
-                const m = s.date.substring(5,7);
-                const d = s.date.substring(8,10);
-                return `${m}/${d} ${s.fullTime} (${s.classType})${s.hasStar ? ' *' : ''}`;
-            }).join('\n');
+            const details = selected.map(s => `${s.date} ${s.fullTime} (${s.classType})${s.hasStar ? ' *' : ''}`).join('\n');
 
             const formData = new URLSearchParams();
             formData.append('entry.1485466301', name);
@@ -504,17 +532,17 @@
                     body: formData,
                     mode: 'no-cors'
                 });
+                closeConfirmModal();
                 document.getElementById('form').classList.add('hidden');
-                document.getElementById('confirmModal').classList.add('hidden');
                 document.getElementById('thankYou').classList.remove('hidden');
             } catch (e) {
-                showError('提交失敗，請檢查網路後再試');
-                console.error(e);
+                showError('提交失敗，請檢查網路或稍後再試。');
+                console.error('提交錯誤:', e);
             }
         }
 
         function clearSelected() {
-            if (confirm('確定清除所有已選課程？')) {
+            if (confirm('確定清除所有已選課程嗎？')) {
                 selected = [];
                 updateCounter();
                 if (currentClass) renderCalendar(currentMonth);
@@ -522,12 +550,12 @@
         }
 
         function clearForm() {
-            if (confirm('確定清除整個表單（包括姓名與電話）？')) {
+            if (confirm('確定清除整個表單嗎？')) {
                 document.getElementById('name').value = '';
                 document.getElementById('phone').value = '';
                 selected = [];
-                currentClass = '';
                 updateCounter();
+                currentClass = '';
                 document.getElementById('calendarSection').classList.add('hidden');
             }
         }
@@ -540,9 +568,9 @@
 
         function showError(msg) {
             const err = document.getElementById('error');
-            err.innerHTML = msg;
+            err.textContent = msg;
             err.classList.remove('hidden');
-            setTimeout(() => err.classList.add('hidden'), 10000);
+            setTimeout(() => err.classList.add('hidden'), 5000);
         }
 
         init();
