@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>培匠跆拳道班報名表</title>
+  <title>培匠跆拳道訓練中心 報名表</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -154,7 +154,7 @@
 <body>
   <div class="form-container" id="formContainer">
     <div class="header">
-      <h1 class="text-4xl font-bold mb-3">培匠跆拳道</h1>
+      <h1 class="text-4xl font-bold mb-3">培匠跆拳道訓練中心</h1>
       <p class="text-xl opacity-95">香港實用跆拳道協會旗下道場</p>
     </div>
 
@@ -288,7 +288,6 @@
         const newSchedules = {};
         data.table.rows.forEach(row => {
           const classType = row.c[0]?.v?.trim();
-          const weekday = row.c[1]?.v?.trim();
           const fullTimeSlot = row.c[2]?.v?.toString().trim();
           const hasAsterisk = row.c[3]?.v === '*';
           const dates = row.c.slice(4)
@@ -300,7 +299,6 @@
             if (!newSchedules[classType]) newSchedules[classType] = {};
             if (!newSchedules[classType][cleanTime]) newSchedules[classType][cleanTime] = [];
             newSchedules[classType][cleanTime].push({
-              weekday,
               dates,
               hasAsterisk,
               fullTimeSlot: fullTimeSlot,
@@ -345,7 +343,10 @@
     function formatDateWithDay(dateStr, fullTimeSlot, classType) {
       const date = new Date(dateStr);
       const dayNames = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-      return `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
+      const yearStr = date.getFullYear();
+      const monthStr = String(date.getMonth() + 1).padStart(2, '0');
+      const dayStr = String(date.getDate()).padStart(2, '0');
+      return `${yearStr}年${monthStr}月${dayStr}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
     }
 
     function updateCalendar() {
@@ -512,7 +513,7 @@
         <p><strong>學員姓名：</strong> ${name}</p>
         <p><strong>聯絡電話：</strong> ${phone}</p>
         <p><strong>班別：</strong> ${selectedClassType}</p>
-        <p><strong>總堂數：</strong> ${previousSelectedDates.length} 堂</p>
+        <p><strong>總堂數：</strong> 共 ${previousSelectedDates.length} 堂</p>
         <div class="mt-6 border-t pt-4">${previousSelectedDates.map(d => 
           `<div class="py-1">${formatDateWithDay(d.date, d.fullTimeSlot, d.classType)}</div>`
         ).join('')}</div>
@@ -526,7 +527,8 @@
       hideModal('confirmModal');
       const form = document.getElementById('registrationForm');
       const fd = new FormData(form);
-      fd.set('entry.1451557446', `${previousSelectedDates.length} 堂`);
+      fd.set('entry.1451557446', `共 ${previousSelectedDates.length} 堂`);
+      fd.set('entry.781986668', selectedClassType);
       try {
         await fetch(form.action, { method: 'POST', body: fd, mode: 'no-cors' });
       } catch(e) {}
@@ -536,7 +538,6 @@
 
     function restartForm() { location.reload(); }
 
-    // 啟動
     loadScheduleFromSheet();
   </script>
 </body>
