@@ -40,10 +40,12 @@
 
     input {
       width: 100%;
-      padding: 16px 20px;
+      padding: 22px 24px 22px 36px;   /* 高度增加 + 左邊留空 */
       border: 2px solid #e5e7eb;
       border-radius: 18px;
       font-size: 16px;
+      line-height: 1.5;
+      transition: all 0.3s ease;
     }
     input:focus {
       border-color: rgb(var(--primary));
@@ -57,25 +59,26 @@
 
     .calendar-table {
       width: 100%;
-      min-width: 760px;
+      min-width: 660px;
       border-collapse: separate;
-      border-spacing: 6px;
+      border-spacing: 5px;
       background: #f8fafc;
       border-radius: 16px;
     }
     .calendar-table th {
       background: #1e40af;
       color: white;
-      padding: 12px 6px;
+      padding: 10px 6px;
       font-weight: 600;
+      font-size: 14.5px;
     }
     .calendar-table td {
       background: white;
       border: 2px solid #e5e7eb;
       border-radius: 14px;
-      padding: 10px 8px;
+      padding: 8px 6px;
       vertical-align: top;
-      min-height: 118px;
+      min-height: 108px;
     }
     .calendar-table td.disabled {
       background: #f3f4f6;
@@ -86,10 +89,10 @@
       display: block;
       background: #f1f5f9;
       border: 2px solid #e2e8f0;
-      padding: 9px 12px;
-      margin: 6px 4px;
+      padding: 8px 10px;
+      margin: 5px 3px;
       border-radius: 12px;
-      font-size: 14.5px;
+      font-size: 14px;
       cursor: pointer;
       transition: all 0.3s ease;
       text-align: center;
@@ -214,7 +217,7 @@
     <span class="count text-2xl font-bold">0 堂</span>
   </div>
 
-  <!-- Modals -->
+  <!-- Confirm Modal -->
   <div id="confirmModal" class="modal">
     <div class="modal-content p-8">
       <h2 class="text-2xl font-semibold mb-6">請確認報名資料</h2>
@@ -226,6 +229,7 @@
     </div>
   </div>
 
+  <!-- Class Modal -->
   <div id="classModal" class="modal">
     <div class="modal-content p-8">
       <h2 class="text-2xl font-semibold mb-4">已選課程</h2>
@@ -237,6 +241,7 @@
     </div>
   </div>
 
+  <!-- Reset Confirm Modal -->
   <div id="resetConfirmModal" class="modal">
     <div class="modal-content p-8 max-w-sm mx-auto">
       <h2 class="text-xl font-semibold mb-4">確認清除課堂</h2>
@@ -248,6 +253,7 @@
     </div>
   </div>
 
+  <!-- Clear Form Confirm Modal -->
   <div id="clearFormConfirmModal" class="modal">
     <div class="modal-content p-8 max-w-sm mx-auto">
       <h2 class="text-xl font-semibold mb-4">確認清除表單</h2>
@@ -259,6 +265,7 @@
     </div>
   </div>
 
+  <!-- Thank You Page -->
   <div id="thankYouPage" class="hidden form-container p-12 text-center">
     <h2 class="text-3xl font-bold mb-6">報名成功！🎉</h2>
     <p class="text-gray-600">您將收到 WhatsApp 確認訊息與付款詳情</p>
