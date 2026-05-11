@@ -9,8 +9,6 @@
   <style>
     :root {
       --primary: 96 165 250;
-      --primary-dark: 30 64 175;
-      --accent: 134 239 172;
     }
 
     body {
@@ -19,8 +17,8 @@
       color: #1f2937;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
       padding: 20px;
     }
 
@@ -46,25 +44,29 @@
       border: 2px solid #e5e7eb;
       border-radius: 18px;
       font-size: 16px;
-      transition: all 0.3s ease;
     }
     input:focus {
       border-color: rgb(var(--primary));
       box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.15);
     }
 
+    .calendar-container {
+      overflow-x: auto;
+      padding-bottom: 12px;
+    }
+
     .calendar-table {
       width: 100%;
+      min-width: 760px;
       border-collapse: separate;
       border-spacing: 6px;
       background: #f8fafc;
       border-radius: 16px;
-      overflow: hidden;
     }
     .calendar-table th {
       background: #1e40af;
       color: white;
-      padding: 12px 8px;
+      padding: 12px 6px;
       font-weight: 600;
     }
     .calendar-table td {
@@ -73,7 +75,7 @@
       border-radius: 14px;
       padding: 10px 8px;
       vertical-align: top;
-      min-height: 120px;
+      min-height: 118px;
     }
     .calendar-table td.disabled {
       background: #f3f4f6;
@@ -96,7 +98,6 @@
     .time-slot span:hover {
       background: #e0f2fe;
       border-color: rgb(var(--primary));
-      transform: translateY(-1px);
     }
     .time-slot span.selected {
       background: rgb(var(--primary));
@@ -131,12 +132,22 @@
       color: white;
     }
     .btn-primary:hover {
-      background: rgb(30 64 175);
+      background: #1e40af;
       transform: translateY(-2px);
     }
 
     .floating-counter {
       background: linear-gradient(135deg, rgb(96 165 250), rgb(134 239 172));
+    }
+
+    footer {
+      width: 100%;
+      max-width: 960px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 14px;
+      margin-top: 30px;
+      padding: 0 20px;
     }
   </style>
 </head>
@@ -148,7 +159,7 @@
     </div>
 
     <div class="p-8 md:p-12">
-      <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-600 p-5 rounded-3xl mb-8"></div>
+      <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-600 p-5 rounded-3xl mb-8 text-center"></div>
 
       <div class="intro-text text-gray-600 text-[17px] leading-relaxed mb-10 space-y-3">
         <p>家長你好！👋</p>
@@ -184,7 +195,7 @@
         <div id="scheduleSection" class="hidden">
           <h2 class="text-2xl font-semibold mb-6">選擇上課日期與時段</h2>
           <p class="text-sm text-gray-500 mb-6">有 * 為色帶可參加班別</p>
-          <div id="calendar"></div>
+          <div id="calendar" class="calendar-container"></div>
           <p id="classCountPrompt" class="text-center text-lg font-medium mt-8"></p>
         </div>
 
@@ -218,7 +229,7 @@
   <div id="classModal" class="modal">
     <div class="modal-content p-8">
       <h2 class="text-2xl font-semibold mb-4">已選課程</h2>
-      <div id="classModalContent" class="max-h-96 overflow-auto"></div>
+      <div id="classModalContent" class="max-h-96 overflow-auto text-sm"></div>
       <div class="flex gap-4 mt-8">
         <button onclick="showResetConfirmModal()" class="flex-1 py-4 bg-red-100 text-red-700 rounded-2xl">重選課堂</button>
         <button onclick="closeClassModal()" class="flex-1 py-4 bg-gray-100 hover:bg-gray-200 rounded-2xl">關閉</button>
@@ -254,15 +265,15 @@
     <button onclick="restartForm()" class="mt-10 btn-primary px-12 py-4 text-lg">重新報名</button>
   </div>
 
+  <footer>版本 1.3 • 柔和極簡版 • 2026</footer>
+
   <script>
     let schedules = {};
     let previousSelectedDates = [];
     let selectedClassType = '';
     const year = '2026';
     const months = ['05','06'];
-    const sheetName = `${year}${months[0]}恆常班時間表`;
-    const spreadsheetId = '1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU';
-    const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=675929662`;
+    const apiUrl = `https://docs.google.com/spreadsheets/d/1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(year + months[0] + '恆常班時間表')}&gid=675929662`;
 
     document.getElementById('introMonths').textContent = `以下為${year}年${months.join('-')}月恆常班報名表格📝`;
 
@@ -463,7 +474,6 @@
       updateClassCountPrompt();
     }
 
-    // Modal functions
     function showModal(id) { document.getElementById(id).classList.add('active'); }
     function hideModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -489,7 +499,6 @@
     function closeClearFormConfirmModal() { hideModal('clearFormConfirmModal'); }
     function confirmClearForm() { location.reload(); }
 
-    // Form Submit
     document.getElementById('registrationForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
