@@ -40,7 +40,7 @@
 
     input {
       width: 100%;
-      padding: 22px 24px 22px 36px;   /* 高度增加 + 左邊留空 */
+      padding: 22px 24px 22px 40px;   /* 高度增加 + 左邊留空 */
       border: 2px solid #e5e7eb;
       border-radius: 18px;
       font-size: 16px;
@@ -356,6 +356,28 @@
       return `${yearStr}年${monthStr}月${dayStr}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
     }
 
+    function generateGroupedDates(dates) {
+      if (!dates.length) return '<p class="text-gray-500">尚未選擇任何課程</p>';
+      const grouped = {};
+      dates.forEach(d => {
+        if (!d.pendingCancel) {
+          if (!grouped[d.classType]) grouped[d.classType] = [];
+          grouped[d.classType].push(d);
+        }
+      });
+
+      let html = '';
+      Object.keys(grouped).sort().forEach(classType => {
+        const items = grouped[classType].sort((a, b) => new Date(a.date) - new Date(b.date) || a.timeSlot.localeCompare(b.timeSlot));
+        html += `<div class="mb-6"><h3 class="font-semibold text-lg mb-3 text-blue-700">${classType} (${items.length}堂)</h3>`;
+        items.forEach(item => {
+          html += `<div class="py-2 border-b last:border-0 pl-4">${formatDateWithDay(item.date, item.fullTimeSlot, item.classType)}</div>`;
+        });
+        html += `</div>`;
+      });
+      return html;
+    }
+
     function updateCalendar() {
       const container = document.getElementById('calendar');
       container.innerHTML = '';
@@ -487,9 +509,7 @@
 
     function showClassModal() {
       showModal('classModal');
-      document.getElementById('classModalContent').innerHTML = previousSelectedDates.map(d => 
-        `<div class="py-2 border-b">${formatDateWithDay(d.date, d.fullTimeSlot, d.classType)}</div>`
-      ).join('');
+      document.getElementById('classModalContent').innerHTML = generateGroupedDates(previousSelectedDates);
     }
     function closeClassModal() { hideModal('classModal'); }
 
@@ -507,6 +527,13 @@
     function closeClearFormConfirmModal() { hideModal('clearFormConfirmModal'); }
     function confirmClearForm() { location.reload(); }
 
+    // 點擊背景關閉
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', e => {
+        if (e.target === modal) hideModal(modal.id);
+      });
+    });
+
     document.getElementById('registrationForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
@@ -521,9 +548,7 @@
         <p><strong>聯絡電話：</strong> ${phone}</p>
         <p><strong>班別：</strong> ${selectedClassType}</p>
         <p><strong>總堂數：</strong> 共 ${previousSelectedDates.length} 堂</p>
-        <div class="mt-6 border-t pt-4">${previousSelectedDates.map(d => 
-          `<div class="py-1">${formatDateWithDay(d.date, d.fullTimeSlot, d.classType)}</div>`
-        ).join('')}</div>
+        <div class="mt-6 border-t pt-4">${generateGroupedDates(previousSelectedDates)}</div>
       `;
       showModal('confirmModal');
     });
