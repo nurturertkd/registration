@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>培匠跆拳道訓練中心 報名表</title>
+  <title>培匠跆拳道訓練中心 - 2026暑期新生報名表</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -158,7 +158,7 @@
   <div class="form-container" id="formContainer">
     <div class="header">
       <h1 class="text-4xl font-bold mb-3">培匠跆拳道訓練中心</h1>
-      <p class="text-xl opacity-95">香港實用跆拳道協會旗下道場</p>
+      <p class="text-xl opacity-95">2026暑期新生報名表</p>
     </div>
 
     <div class="p-8 md:p-12">
@@ -269,7 +269,7 @@
     <button onclick="restartForm()" class="mt-10 btn-primary px-12 py-4 text-lg">重新報名</button>
   </div>
 
-  <footer>版本 1.5 • 最終優化版 • 2026</footer>
+  <footer>版本 1.5 • 2026暑期新生版 • 2026</footer>
 
   <script>
     let schedules = {};
@@ -278,9 +278,12 @@
     const weekdayOrder = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
     const year = '2026';
     const months = ['05','06'];
-    const apiUrl = `https://docs.google.com/spreadsheets/d/1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(year + months[0] + '恆常班時間表')}&gid=675929662`;
+    
+    // === 修改為暑期新生時間表 ===
+    const sheetName = "2026培匠暑期新生時間表";
+    const apiUrl = `https://docs.google.com/spreadsheets/d/1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=1399949746`;
 
-    document.getElementById('introMonths').textContent = `以下為${year}年${months.join('-')}月恆常班報名表格📝`;
+    document.getElementById('introMonths').textContent = `以下為${year}年暑期新生班報名表格📝`;
 
     async function loadScheduleFromSheet() {
       try {
@@ -347,8 +350,7 @@
       fc.classList.toggle('hidden', count === 0);
     }
 
-    // 提交用的完整格式
-    function formatFullDate(dateStr, fullTimeSlot, classType) {
+    function formatDateWithDay(dateStr, fullTimeSlot, classType) {
       const date = new Date(dateStr);
       const dayNames = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
       const y = date.getFullYear();
@@ -357,7 +359,6 @@
       return `${y}年${m}月${d}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
     }
 
-    // 顯示用的簡化格式
     function formatSimpleDate(dateStr, fullTimeSlot) {
       const date = new Date(dateStr);
       const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -530,7 +531,7 @@
         span.classList.add('selected');
       }
       document.getElementById('selectedDates').value = previousSelectedDates.map(d => 
-        formatFullDate(d.date, d.fullTimeSlot, d.classType)
+        formatDateWithDay(d.date, d.fullTimeSlot, d.classType)
       ).join(', ');
       updateClassCountPrompt();
     }
@@ -589,8 +590,13 @@
       hideModal('confirmModal');
       const form = document.getElementById('registrationForm');
       const fd = new FormData(form);
+      
+      // 加上「暑期班新生」字眼
+      const classTypeWithSummer = selectedClassType + " 暑期班新生";
+      
       fd.set('entry.1451557446', `共 ${previousSelectedDates.length} 堂`);
-      fd.set('entry.781986668', selectedClassType);
+      fd.set('entry.781986668', classTypeWithSummer);
+      
       try {
         await fetch(form.action, { method: 'POST', body: fd, mode: 'no-cors' });
       } catch(e) {}
