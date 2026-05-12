@@ -40,7 +40,7 @@
 
     input {
       width: 100%;
-      padding: 22px 24px 22px 40px;   /* 高度增加 + 左邊留空 */
+      padding: 22px 24px 22px 40px;
       border: 2px solid #e5e7eb;
       border-radius: 18px;
       font-size: 16px;
@@ -78,7 +78,7 @@
       border-radius: 14px;
       padding: 8px 6px;
       vertical-align: top;
-      min-height: 108px;
+      min-height: 110px;
     }
     .calendar-table td.disabled {
       background: #f3f4f6;
@@ -241,7 +241,6 @@
     </div>
   </div>
 
-  <!-- Reset Confirm Modal -->
   <div id="resetConfirmModal" class="modal">
     <div class="modal-content p-8 max-w-sm mx-auto">
       <h2 class="text-xl font-semibold mb-4">確認清除課堂</h2>
@@ -253,7 +252,6 @@
     </div>
   </div>
 
-  <!-- Clear Form Confirm Modal -->
   <div id="clearFormConfirmModal" class="modal">
     <div class="modal-content p-8 max-w-sm mx-auto">
       <h2 class="text-xl font-semibold mb-4">確認清除表單</h2>
@@ -265,19 +263,19 @@
     </div>
   </div>
 
-  <!-- Thank You Page -->
   <div id="thankYouPage" class="hidden form-container p-12 text-center">
     <h2 class="text-3xl font-bold mb-6">報名成功！🎉</h2>
     <p class="text-gray-600">您將收到 WhatsApp 確認訊息與付款詳情</p>
     <button onclick="restartForm()" class="mt-10 btn-primary px-12 py-4 text-lg">重新報名</button>
   </div>
 
-  <footer>版本 1.3 • 柔和極簡版 • 2026</footer>
+  <footer>版本 1.5 • 最終優化版 • 2026</footer>
 
   <script>
     let schedules = {};
     let previousSelectedDates = [];
     let selectedClassType = '';
+    const weekdayOrder = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
     const year = '2026';
     const months = ['05','06'];
     const apiUrl = `https://docs.google.com/spreadsheets/d/1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(year + months[0] + '恆常班時間表')}&gid=675929662`;
@@ -297,6 +295,7 @@
           const classType = row.c[0]?.v?.trim();
           const fullTimeSlot = row.c[2]?.v?.toString().trim();
           const hasAsterisk = row.c[3]?.v === '*';
+          const weekday = row.c[1]?.v?.trim();
           const dates = row.c.slice(4)
             .filter(c => c && c.v && /^\d{4}-\d{2}-\d{2}$/.test(c.v))
             .map(c => c.v);
@@ -309,7 +308,8 @@
               dates,
               hasAsterisk,
               fullTimeSlot: fullTimeSlot,
-              displayTime: cleanTime.match(/^(\d{1,2}:\d{2}\s*(?:am|pm))/i)?.[0] || cleanTime
+              displayTime: cleanTime.match(/^(\d{1,2}:\d{2}\s*(?:am|pm))/i)?.[0] || cleanTime,
+              weekday: weekday
             });
           }
         });
@@ -347,31 +347,60 @@
       fc.classList.toggle('hidden', count === 0);
     }
 
-    function formatDateWithDay(dateStr, fullTimeSlot, classType) {
+    // 提交用的完整格式
+    function formatFullDate(dateStr, fullTimeSlot, classType) {
       const date = new Date(dateStr);
       const dayNames = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-      const yearStr = date.getFullYear();
-      const monthStr = String(date.getMonth() + 1).padStart(2, '0');
-      const dayStr = String(date.getDate()).padStart(2, '0');
-      return `${yearStr}年${monthStr}月${dayStr}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}年${m}月${d}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
+    }
+
+    // 顯示用的簡化格式
+    function formatSimpleDate(dateStr, fullTimeSlot) {
+      const date = new Date(dateStr);
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${m}月${d}日 ${fullTimeSlot}`;
     }
 
     function generateGroupedDates(dates) {
       if (!dates.length) return '<p class="text-gray-500">尚未選擇任何課程</p>';
+
       const grouped = {};
       dates.forEach(d => {
-        if (!d.pendingCancel) {
-          if (!grouped[d.classType]) grouped[d.classType] = [];
-          grouped[d.classType].push(d);
-        }
+        if (d.pendingCancel) return;
+        const ct = d.classType || '未分類';
+        const wd = d.weekday || '未知星期';
+        const month = d.date.slice(0,7);
+        if (!grouped[ct]) grouped[ct] = {};
+        if (!grouped[ct][wd]) grouped[ct][wd] = {};
+        if (!grouped[ct][wd][month]) grouped[ct][wd][month] = [];
+        grouped[ct][wd][month].push(d);
       });
 
       let html = '';
-      Object.keys(grouped).sort().forEach(classType => {
-        const items = grouped[classType].sort((a, b) => new Date(a.date) - new Date(b.date) || a.timeSlot.localeCompare(b.timeSlot));
-        html += `<div class="mb-6"><h3 class="font-semibold text-lg mb-3 text-blue-700">${classType} (${items.length}堂)</h3>`;
-        items.forEach(item => {
-          html += `<div class="py-2 border-b last:border-0 pl-4">${formatDateWithDay(item.date, item.fullTimeSlot, item.classType)}</div>`;
+      Object.keys(grouped).forEach(classType => {
+        const total = Object.values(grouped[classType]).flatMap(w => Object.values(w)).flat().length;
+        html += `<div class="mb-8"><h3 class="font-bold text-xl mb-3 text-blue-700">${classType} (${total}堂)</h3>`;
+
+        weekdayOrder.forEach(weekday => {
+          if (!grouped[classType][weekday]) return;
+          const months = grouped[classType][weekday];
+          const wdCount = Object.values(months).flat().length;
+          html += `<div class="mb-5"><h4 class="font-semibold text-lg mb-3">${weekday} (${wdCount}堂)</h4>`;
+
+          Object.keys(months).sort().forEach(month => {
+            const items = months[month].sort((a,b) => a.date.localeCompare(b.date));
+            const monthName = `${parseInt(month.split('-')[1])}月`;
+            html += `<div class="mb-4"><h5 class="font-medium mb-2">${monthName} (${items.length}堂)</h5><ul class="pl-6 space-y-1">`;
+            items.forEach(item => {
+              html += `<li class="py-1">• ${formatSimpleDate(item.date, item.fullTimeSlot)}</li>`;
+            });
+            html += `</ul></div>`;
+          });
+          html += `</div>`;
         });
         html += `</div>`;
       });
@@ -467,11 +496,12 @@
                 span.dataset.date = dateStr;
                 span.dataset.timeKey = timeKey;
                 span.dataset.fullTime = slot.fullTimeSlot;
+                span.dataset.weekday = slot.weekday;
 
                 const isSelected = previousSelectedDates.some(d => d.date === dateStr && d.timeSlot === timeKey);
                 if (isSelected) span.classList.add('selected');
 
-                span.addEventListener('click', () => toggleTimeSlot(span, dateStr, timeKey, slot.fullTimeSlot));
+                span.addEventListener('click', () => toggleTimeSlot(span, dateStr, timeKey, slot.fullTimeSlot, slot.weekday));
                 slotDiv.appendChild(span);
               }
             });
@@ -483,7 +513,7 @@
       return tr;
     }
 
-    function toggleTimeSlot(span, dateStr, timeKey, fullTimeSlot) {
+    function toggleTimeSlot(span, dateStr, timeKey, fullTimeSlot, weekday) {
       const index = previousSelectedDates.findIndex(d => d.date === dateStr && d.timeSlot === timeKey);
       if (index > -1) {
         previousSelectedDates.splice(index, 1);
@@ -494,12 +524,13 @@
           date: dateStr,
           timeSlot: timeKey,
           fullTimeSlot: fullTimeSlot,
+          weekday: weekday,
           pendingCancel: false
         });
         span.classList.add('selected');
       }
       document.getElementById('selectedDates').value = previousSelectedDates.map(d => 
-        formatDateWithDay(d.date, d.fullTimeSlot, d.classType)
+        formatFullDate(d.date, d.fullTimeSlot, d.classType)
       ).join(', ');
       updateClassCountPrompt();
     }
@@ -527,7 +558,6 @@
     function closeClearFormConfirmModal() { hideModal('clearFormConfirmModal'); }
     function confirmClearForm() { location.reload(); }
 
-    // 點擊背景關閉
     document.querySelectorAll('.modal').forEach(modal => {
       modal.addEventListener('click', e => {
         if (e.target === modal) hideModal(modal.id);
