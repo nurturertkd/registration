@@ -152,6 +152,16 @@
       margin-top: 30px;
       padding: 0 20px;
     }
+
+    .note {
+      background: #f0f9ff;
+      border-left: 5px solid rgb(var(--primary));
+      padding: 16px 20px;
+      margin-top: 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
@@ -159,6 +169,11 @@
     <div class="header">
       <h1 class="text-4xl font-bold mb-3">培匠跆拳道訓練中心</h1>
       <p class="text-xl opacity-95">2026暑期新生報名表</p>
+    </div>
+
+    <!-- 新增圖片 -->
+    <div class="px-8 pt-4 pb-6 text-center">
+      <img src="2026_summer_timetable_new.png" alt="2026暑期新生時間表" class="mx-auto rounded-2xl shadow-md max-w-full h-auto">
     </div>
 
     <div class="p-8 md:p-12">
@@ -205,6 +220,15 @@
         <div class="flex flex-col sm:flex-row gap-4 pt-6">
           <button type="submit" class="btn-primary flex-1 py-5 text-lg font-semibold">下一步：確認資料</button>
           <button type="button" onclick="showClearFormConfirmModal()" class="bg-gray-100 hover:bg-gray-200 flex-1 py-5 text-lg font-semibold">清除表單</button>
+        </div>
+
+        <!-- 備註 -->
+        <div class="note">
+          <strong>備註：</strong><br>
+          學員需穿上本會道袍上堂<br>
+          家長可先付款（$350）<br>
+          於首堂或之前到道場選尺寸<br>
+          詳情請向教練查詢🔍
         </div>
       </form>
     </div>
@@ -278,8 +302,7 @@
     const weekdayOrder = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
     const year = '2026';
     const months = ['07','08'];
-    
-    // === 修改為暑期新生時間表 ===
+
     const sheetName = "2026培匠暑期新生時間表";
     const apiUrl = `https://docs.google.com/spreadsheets/d/1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=1399949746`;
 
@@ -591,7 +614,6 @@
       const form = document.getElementById('registrationForm');
       const fd = new FormData(form);
       
-      // 加上「暑期班新生」字眼
       const classTypeWithSummer = selectedClassType + " 暑期班新生";
       
       fd.set('entry.1451557446', `共 ${previousSelectedDates.length} 堂`);
