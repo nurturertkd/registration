@@ -1,1103 +1,706 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2025年暑期跆拳道班報名表格📝</title>
-  <!-- Google Fonts: Noto Sans TC -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Tailwind CSS CDN -->
+  <title>培匠跆拳道訓練中心 - 2026暑期新生報名表</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      font-family: 'Noto Sans TC', Arial, sans-serif;
-      max-width: 960px;
-      margin: 40px auto;
-      padding: 20px;
-      background: linear-gradient(135deg, #E0F2FE 0%, #F3F4F6 100%);
-      color: #1F2937;
+    :root {
+      --primary: 96 165 250;
     }
+
+    body {
+      font-family: 'Noto Sans TC', system-ui, sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);
+      color: #1f2937;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
     .form-container {
       background: white;
-      padding: 48px;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    }
-    .form-group {
-      margin-bottom: 32px;
-    }
-    label {
-      display: block;
-      margin-bottom: 10px;
-      font-weight: 500;
-      font-size: 16px;
-      color: #1F2937;
-    }
-    input, select {
+      max-width: 960px;
       width: 100%;
-      padding: 14px;
-      border: 1px solid #D1D5DB;
-      border-radius: 10px;
-      box-sizing: border-box;
+      border-radius: 28px;
+      box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, rgb(96 165 250), rgb(134 239 172));
+      color: white;
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 22px 24px 22px 40px;
+      border: 2px solid #e5e7eb;
+      border-radius: 18px;
       font-size: 16px;
-      height: 44px;
       line-height: 1.5;
-      transition: border-color 0.3s, box-shadow 0.3s;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
     }
-    #name, #phone {
-      padding-left: 16px;
-      padding-right: 16px;
+    input:focus {
+      border-color: rgb(var(--primary));
+      box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.15);
     }
-    input:focus, select:focus {
-      outline: none;
-      border-color: #3B82F6;
-      box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+
+    .calendar-container {
+      overflow-x: auto;
+      padding-bottom: 12px;
     }
-    .date-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+
+    .calendar-table {
+      width: 100%;
+      min-width: 660px;
+      border-collapse: separate;
+      border-spacing: 5px;
+      background: #f8fafc;
+      border-radius: 16px;
     }
-    .date-group select {
-      width: 120px;
-      height: 44px;
+    .calendar-table th {
+      background: #1e40af;
+      color: white;
+      padding: 10px 6px;
+      font-weight: 600;
+      font-size: 14.5px;
     }
-    .date-group span {
-      font-size: 16px;
-      color: #1F2937;
-    }
-    .gender-group {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-    }
-    .gender-group label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    input[type="radio"] {
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #D1D5DB;
-      border-radius: 50%;
+    .calendar-table td {
       background: white;
-      position: relative;
-      cursor: pointer;
-      transition: all 0.2s;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 8px 6px;
+      vertical-align: top;
+      min-height: 110px;
     }
-    input[type="radio"]:hover {
-      border-color: #3B82F6;
+    .calendar-table td.disabled {
+      background: #f3f4f6;
+      color: #9ca3af;
     }
-    input[type="radio"]:checked {
-      border-color: #3B82F6;
-    }
-    input[type="radio"]:checked::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #3B82F6;
-    }
-    .course-card {
-      border: 1px solid #D1D5DB;
-      border-radius: 10px;
-      padding: 16px;
+
+    .time-slot span {
+      display: block;
+      background: #f1f5f9;
+      border: 2px solid #e2e8f0;
+      padding: 8px 10px;
+      margin: 5px 3px;
+      border-radius: 12px;
+      font-size: 14px;
       cursor: pointer;
       transition: all 0.3s ease;
-      background-color: #F3F4F6;
+      text-align: center;
+      font-weight: 500;
     }
-    .course-card:hover {
-      transform: scale(1.03);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    .time-slot span:hover {
+      background: #e0f2fe;
+      border-color: rgb(var(--primary));
     }
-    .course-card.selected {
-      border: 2px solid #3B82F6;
-      box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
-      background-color: #E0F2FE;
+    .time-slot span.selected {
+      background: rgb(var(--primary));
+      color: white;
+      border-color: rgb(var(--primary));
+      transform: scale(1.04);
     }
-    .error {
-      color: #EF4444;
-      font-size: 14px;
-      margin-top: 6px;
-      display: none;
+
+    .price-box {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border: 2px solid rgb(96 165 250);
+      border-radius: 20px;
+      padding: 18px 24px;
+      margin-top: 20px;
     }
+
+    .total-price {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e40af;
+    }
+
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      justify-content: center;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
       align-items: center;
-      z-index: 1000;
+      justify-content: center;
+      z-index: 2000;
     }
+    .modal.active { display: flex; }
+
     .modal-content {
-      background-color: white;
-      padding: 32px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 600px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 30px 60px -15px rgb(0 0 0 / 0.25);
+      max-width: 640px;
+      width: 92%;
+      max-height: 88vh;
+      overflow-y: auto;
     }
-    .modal-content p {
-      font-size: 16px;
-      margin: 12px 0;
-    }
-    .modal-content ul {
-      padding-left: 20px;
-      margin: 12px 0;
-    }
-    .modal-content ul li {
-      font-size: 16px;
-      line-height: 1.8;
-      list-style: none;
-      position: relative;
-    }
-    .modal-content ul li::before {
-      content: '•';
-      position: absolute;
-      left: -20px;
-      color: #3B82F6;
-    }
-    button {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      min-width: 100px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    button[type="submit"], button.confirm, button.return-button {
-      background-color: #3B82F6;
+
+    .btn-primary {
+      background: rgb(var(--primary));
       color: white;
     }
-    button[type="submit"]:hover, button.confirm:hover, button.return-button:hover {
-      background-color: #2563EB;
-      transform: scale(1.05);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    .btn-primary:hover {
+      background: #1e40af;
+      transform: translateY(-2px);
     }
-    button.cancel {
-      background-color: #D1D5DB;
-      color: #1F2937;
+
+    .floating-counter {
+      background: linear-gradient(135deg, rgb(96 165 250), rgb(134 239 172));
     }
-    button.cancel:hover {
-      background-color: #B9C2CC;
-      transform: scale(1.05);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-    }
-    #thankYouPage {
-      display: none;
-      background: white;
-      padding: 48px;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-      text-align: center;
-    }
-    #thankYouPage h2 {
-      font-size: 24px;
-      margin-bottom: 16px;
-      color: #1F2937;
-    }
-    #thankYouPage p {
-      font-size: 16px;
-      margin: 16px 0;
-      color: #166534;
-    }
-    .calendar-container {
-      max-width: 100%;
-      overflow-x: auto;
-      padding: 0 8px;
-    }
-    .calendar-table {
+
+    footer {
       width: 100%;
-      max-width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      margin-top: 16px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .calendar-table.july {
-      background: #DBEAFE;
-    }
-    .calendar-table.august {
-      background: #D1FAE5;
-    }
-    .calendar-table th, .calendar-table td {
-      padding: 14px;
+      max-width: 960px;
       text-align: center;
+      color: #9ca3af;
       font-size: 14px;
-      min-width: 48px;
-    }
-    .calendar-table th {
-      background-color: #1E3A8A;
-      color: white;
-      font-weight: 500;
-    }
-    .calendar-table td {
-      background-color: #F9FAFB;
-      vertical-align: top;
-      transition: background-color 0.3s ease;
-    }
-    .calendar-table td.disabled {
-      background-color: #E5E7EB;
-      color: #9CA3AF;
-      cursor: not-allowed;
-    }
-    .calendar-table .date {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: #1F2937;
-    }
-    .calendar-table .time-slot {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .calendar-table .time-slot span {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      background-color: #E5E7EB;
-    }
-    .calendar-table .time-slot span:hover {
-      background-color: #93C5FD;
-      transform: scale(1.05);
-    }
-    .calendar-table .time-slot span.selected {
-      background-color: #3B82F6;
-      color: white;
-      transform: scale(1.05);
-    }
-    .calendar-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: #1F2937;
-    }
-    .intro-text p {
-      margin-bottom: 8px;
-    }
-    .intro-text .spacer {
-      height: 16px;
-      margin: 0;
-    }
-    h1 {
-      line-height: 1.4;
-    }
-    /* Image styles */
-    .timetable-image-container {
-      margin: 16px 0;
-      text-align: center;
-    }
-    .timetable-image {
-      max-width: 100%;
-      height: auto;
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      pointer-events: auto;
-    }
-    .image-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 1001;
-    }
-    .image-modal-content {
-      max-width: 90%;
-      max-height: 90%;
-      object-fit: contain;
-      user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-    }
-    .image-modal-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      color: white;
-      font-size: 30px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    @media (max-width: 600px) {
-      body {
-        margin: 16px auto;
-        padding: 12px;
-      }
-      .form-container, #thankYouPage {
-        padding: 24px;
-      }
-      .form-group {
-        margin-bottom: 24px;
-      }
-      h1 {
-        font-size: 28px;
-      }
-      h2 {
-        font-size: 18px;
-      }
-      label {
-        font-size: 14px;
-      }
-      input, select {
-        padding: 10px;
-        font-size: 14px;
-        height: 40px;
-        border-radius: 8px;
-      }
-      #name, #phone {
-        padding-left: 12px;
-        padding-right: 12px;
-      }
-      .date-group {
-        gap: 8px;
-      }
-      .date-group select {
-        width: 100px;
-        height: 40px;
-      }
-      .date-group span {
-        font-size: 14px;
-      }
-      .gender-group {
-        gap: 16px;
-      }
-      .gender-group label {
-        font-size: 14px;
-        gap: 6px;
-      }
-      input[type="radio"] {
-        width: 18px;
-        height: 18px;
-      }
-      input[type="radio"]:checked::after {
-        width: 10px;
-        height: 10px;
-      }
-      .course-card {
-        padding: 12px;
-      }
-      .modal-content {
-        width: 95%;
-        padding: 24px;
-      }
-      .modal-content p, .modal-content ul li {
-        font-size: 14px;
-      }
-      .modal-content ul {
-        padding-left: 16px;
-      }
-      .modal-content ul li::before {
-        left: -16px;
-      }
-      button {
-        padding: 10px 20px;
-        font-size: 14px;
-        min-width: 80px;
-        border-radius: 8px;
-      }
-      .calendar-container {
-        padding: 0 4px;
-      }
-      .calendar-table {
-        margin-top: 12px;
-      }
-      .calendar-table th, .calendar-table td {
-        padding: 8px;
-        font-size: 14px;
-        min-width: 40px;
-      }
-      .calendar-table th {
-        font-size: 14px;
-        font-weight: 600;
-      }
-      .calendar-table .date {
-        font-size: 14px;
-      }
-      .calendar-table .time-slot span {
-        font-size: 9px;
-        padding: 3px 6px;
-      }
-      .calendar-title {
-        font-size: 16px;
-      }
-      .intro-text p {
-        margin-bottom: 6px;
-      }
-      .intro-text .spacer {
-        height: 12px;
-      }
-      #classCountPrompt {
-        font-size: 12px;
-      }
-      .timetable-image {
-        width: 100%;
-      }
-      .image-modal-content {
-        max-width: 95%;
-        max-height: 95%;
-      }
-      .image-modal-close {
-        font-size: 24px;
-        top: 10px;
-        right: 10px;
-      }
+      margin-top: 30px;
+      padding: 0 20px;
     }
   </style>
 </head>
 <body>
   <div class="form-container" id="formContainer">
-    <h1 class="text-3xl font-bold text-center text-gray-800">
-      2025年暑期跆拳道班<br>報名表格
-    </h1>
-    <div class="timetable-image-container">
-      <img src="2025summer_time_table.JPG" alt="2025 Summer Timetable" class="timetable-image" onclick="openImageModal()">
-    </div>
-    <div class="intro-text text-gray-600 text-lg">
-      <p class="spacer"></p>
-      <p class="spacer"></p>
-      <p>家長你好! 👋🏻</p>
-      <p>以下為2025年暑期班報名表格📝</p>
-      <p>請按照小朋友時間表，填寫以下資訊以完成報名程序</p>
-      <p class="spacer"></p>
-      <p>成功提交報名後，您將收到WhatsApp確認訊息，以及付款詳情💬</p>
-      <p class="spacer"></p>
-      <p><strong>早鳥優惠，立刻報名!🔥</strong></p>
-      <p>成功於6月22日或之前成功報名及完成付款，將可享有9折優惠!</p>
-      <p class="spacer"></p>
-      <p class="text-gray-500 text-[15px] leading-tight">備註:</p> 
-      <p class="text-gray-500 text-[15px] leading-tight">學員需穿上本會道袍上堂</p>
-      <p class="text-gray-500 text-[15px] leading-tight">家長可先付款($350)</p>
-      <p class="text-gray-500 text-[15px] leading-tight">於首堂或之前到道場選尺寸</p>
-      <p class="text-gray-500 text-[15px] leading-tight">詳情請向教練查詢🔍</p>
-      <p class="spacer"></p>
-      <p class="spacer"></p>
+    <div class="header">
+      <h1 class="text-4xl font-bold mb-3">培匠跆拳道訓練中心</h1>
+      <p class="text-xl opacity-95">2026暑期新生報名表</p>
     </div>
 
-    <form id="registrationForm" action="https://docs.google.com/forms/d/e/1FAIpQLScxNYEXWMkoCU7UffKYNPRXBWtfxk0w7H5cTApecn8MJcxdyg/formResponse" method="POST" class="space-y-8">
-      <!-- 學員資訊 -->
-      <div class="form-group">
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">學員資訊</h2>
-        <div class="form-group">
-          <label for="name">學員中文姓名 *</label>
-          <input type="text" id="name" name="entry.520929458" required>
-          <span id="nameError" class="error">請輸入學員姓名</span>
-        </div>
-        <div class="form-group">
-          <label for="phone">聯絡電話（需接收WhatsApp訊息） *</label>
-          <input type="tel" id="phone" name="entry.1848250356" pattern="\+?\d{8,}" required>
-          <span id="phoneError" class="error">請輸入有效的電話號碼</span>
-        </div>
-        <div class="form-group">
-          <label for="birthYear">出生日期 *</label>
-          <div class="date-group">
-            <select id="birthYear" name="entry.68040101_year" required>
-              <option value="">年</option>
-            </select>
-            <span>/</span>
-            <select id="birthMonth" name="entry.68040101_month" required>
-              <option value="">月</option>
-            </select>
-            <span>/</span>
-            <select id="birthDay" name="entry.68040101_day" required>
-              <option value="">日</option>
-            </select>
-          </div>
-          <span id="birthdateError" class="error">請選擇有效的出生日期</span>
-        </div>
-        <div class="form-group">
-          <label>性別 *</label>
-          <div class="gender-group">
-            <label><input type="radio" name="entry.1745029240" value="男" required> 男</label>
-            <label><input type="radio" name="entry.1745029240" value="女"> 女</label>
-          </div>
-          <span id="genderError" class="error">請選擇性別</span>
-        </div>
+    <div class="px-8 pt-4 pb-6 text-center">
+      <img src="2026_summer_timetable_new.png" alt="2026暑期新生時間表" class="mx-auto rounded-2xl shadow-md max-w-full h-auto">
+    </div>
+
+    <div class="p-8 md:p-12">
+      <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-600 p-5 rounded-3xl mb-8 text-center"></div>
+
+      <div class="intro-text text-gray-600 text-[17px] leading-relaxed mb-10 space-y-3">
+        <p>家長你好！👋</p>
+        <p id="introMonths" class="font-medium text-lg"></p>
+        <p>請按照小朋友時間表填寫以下資訊</p>
+        <p class="text-blue-600 font-medium">完成後會收到 WhatsApp 通知確認付款💬</p>
+        <br>
+        <strong class="text-gray-800">備註：</strong><br>
+        學員需穿上本會道袍上堂🥋<br>
+        費用 $350<br>
+        家長可先付款<br>
+        於首堂或之前到道場選尺寸<br>
+        詳情請向教練查詢🔍
       </div>
 
-      <!-- 課程選擇 -->
-      <div class="form-group">
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">課程選擇</h2>
-        <div class="form-group">
-          <label>報名課堂（早鳥9折優惠） *</label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div class="course-card" data-value="全期4堂 $792" onclick="selectCourse(this)">
-              <h3 class="text-lg font-semibold">全期4堂</h3>
-              <p class="text-gray-600">原價 $220/堂，早鳥9折：$792</p>
+      <form id="registrationForm" action="https://docs.google.com/forms/d/e/1FAIpQLSe0kOPO9hkI1TmXDOGEMSonsd79Lu5Cenam3qqexGpKctcaDw/formResponse" method="POST" class="space-y-12">
+        <div>
+          <h2 class="text-2xl font-semibold mb-6">學員資訊</h2>
+          <div class="space-y-7">
+            <div>
+              <label class="block font-medium mb-2">學員中文姓名</label>
+              <input type="text" id="name" name="entry.1485466301" required>
             </div>
-            <div class="course-card" data-value="全期6堂 $1,188" onclick="selectCourse(this)">
-              <h3 class="text-lg font-semibold">全期6堂</h3>
-              <p class="text-gray-600">原價 $220/堂，早鳥9折：$1,188</p>
-            </div>
-            <div class="course-card" data-value="全期8堂 $1,440" onclick="selectCourse(this)">
-              <h3 class="text-lg font-semibold">全期8堂</h3>
-              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$1,440</p>
-            </div>
-            <div class="course-card" data-value="全期10堂 $1,800" onclick="selectCourse(this)">
-              <h3 class="text-lg font-semibold">全期10堂</h3>
-              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$1,800</p>
-            </div>
-            <div class="course-card" data-value="全期12堂 $2,160" onclick="selectCourse(this)">
-              <h3 class="text-lg font-semibold">全期12堂</h3>
-              <p class="text-gray-600">原價 $220/堂減$20，再早鳥9折：$2,160</p>
+            <div>
+              <label class="block font-medium mb-2">聯絡電話（需接收WhatsApp）</label>
+              <input type="tel" id="phone" name="entry.1919163075" pattern="\+?\d{8,}" required>
             </div>
           </div>
-          <input type="hidden" id="courseOption" name="entry.714236598">
-          <span id="courseError" class="error">請選擇課程方案</span>
         </div>
-        <div class="form-group">
-          <label for="classType">所選班別 *</label>
-          <select id="classType" name="entry.750153756" required class="w-full" onchange="updateCalendar()">
-            <option value="" disabled selected>請選擇</option>
-            <option value="3歲至5歲">3歲至5歲</option>
-            <option value="6歲或以上">6歲或以上</option>
-          </select>
-          <span id="classTypeError" class="error">請選擇班別</span>
-        </div>
-      </div>
 
-      <!-- 課程時間選擇（表格日曆） -->
-      <div id="scheduleSection" class="form-group hidden">
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">課程時間與日期</h2>
-        <p class="text-sm text-gray-600 mb-4">請根據所選課程堂數，在下方表格中點選對應數量的日期及時段，總數需符合課程堂數。</p>
-        <div class="form-group">
-          <label>選擇日期與時段（在表格中點選） *</label>
-          <div class="calendar-container">
-            <div id="calendar"></div>
+        <div>
+          <h2 class="text-2xl font-semibold mb-6">課程選擇</h2>
+          <input type="hidden" id="totalClasses" name="entry.1451557446">
+          <input type="hidden" id="classType" name="entry.781986668">
+          <input type="hidden" id="selectedDates" name="entry.1595158618">
+
+          <label class="block font-medium mb-3">選擇班別</label>
+          <div id="classTypeButtons" class="flex flex-wrap gap-4"></div>
+
+          <!-- 價格顯示區 -->
+          <div id="priceSection" class="hidden price-box mt-8">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-gray-600 block">已選堂數</span>
+                <span id="priceClassCount" class="font-bold text-2xl">0 堂</span>
+              </div>
+              <div class="text-right">
+                <div id="totalPriceDisplay" class="total-price">$0</div>
+                <div id="priceDetail" class="text-sm text-gray-600 mt-1"></div>
+              </div>
+            </div>
           </div>
-          <p id="classCountPrompt"></p>
-          <span id="datesError" class="error">請選擇正確數量的課程日期</span>
         </div>
-        <input type="hidden" name="entry.363732204" id="selectedDates">
-      </div>
 
-      <!-- 按鈕 -->
-      <div class="flex justify-between gap-4">
-        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">下一步：確認資料</button>
-        <button type="button" onclick="resetForm()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-md hover:bg-gray-400">清除表單</button>
-      </div>
-    </form>
+        <div id="scheduleSection" class="hidden">
+          <h2 class="text-2xl font-semibold mb-6">選擇上課日期與時段</h2>
+          <p class="text-sm text-gray-500 mb-6">有 * 為色帶可參加班別</p>
+          <div id="calendar" class="calendar-container"></div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 pt-6">
+          <button type="submit" class="btn-primary flex-1 py-5 text-lg font-semibold">下一步：確認資料</button>
+          <button type="button" onclick="showClearFormConfirmModal()" class="bg-gray-100 hover:bg-gray-200 flex-1 py-5 text-lg font-semibold">清除表單</button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <!-- 確認頁面 -->
+  <!-- Floating Counter (右下角浮標) -->
+  <div id="floating-counter" onclick="showClassModal()" 
+       class="floating-counter hidden fixed bottom-6 right-6 w-20 h-20 rounded-3xl flex flex-col items-center justify-center text-white cursor-pointer shadow-2xl z-50">
+    <span class="text-xs opacity-90">已選</span>
+    <span class="count text-2xl font-bold">0 堂</span>
+  </div>
+
+  <!-- Confirm Modal -->
   <div id="confirmModal" class="modal">
-    <div class="modal-content">
-      <h2 class="text-xl font-semibold mb-4">請確認您的報名資料</h2>
-      <p><strong>學員中文姓名：</strong> <span id="confirmName"></span></p>
-      <p><strong>聯絡電話：</strong> <span id="confirmPhone"></span></p>
-      <p><strong>出生日期：</strong> <span id="confirmBirthdate"></span></p>
-      <p><strong>性別：</strong> <span id="confirmGender"></span></p>
-      <p><strong>報名課堂：</strong> <span id="confirmCourse"></span></p>
-      <p><strong>所選班別：</strong> <span id="confirmClassType"></span></p>
-      <p><strong>課程日期與時段：</strong></p>
-      <ul id="confirmDates"></ul>
-      <div class="flex justify-between mt-6 gap-4">
-        <button class="cancel" onclick="cancelSubmission()">返回</button>
-        <button class="confirm" onclick="confirmSubmission()">提交</button>
+    <div class="modal-content p-8">
+      <h2 class="text-2xl font-semibold mb-6">請確認報名資料</h2>
+      <div id="confirmContent" class="space-y-4 text-gray-700"></div>
+      <div class="flex gap-4 mt-10">
+        <button onclick="cancelSubmission()" class="flex-1 py-4 bg-gray-100 hover:bg-gray-200 rounded-2xl">返回修改</button>
+        <button onclick="confirmSubmission()" class="flex-1 py-4 btn-primary rounded-2xl">確認提交</button>
       </div>
     </div>
   </div>
 
-  <!-- 圖片放大模態框 -->
-  <div id="imageModal" class="image-modal">
-    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
-    <img src="2025summer_time_table.JPG" alt="2025 Summer Timetable Enlarged" class="image-modal-content">
+  <!-- Class Modal -->
+  <div id="classModal" class="modal">
+    <div class="modal-content p-8">
+      <h2 class="text-2xl font-semibold mb-4">已選課程</h2>
+      <div id="classModalContent" class="max-h-96 overflow-auto text-sm"></div>
+      <div class="flex gap-4 mt-8">
+        <button onclick="showResetConfirmModal()" class="flex-1 py-4 bg-red-100 text-red-700 rounded-2xl">重選課堂</button>
+        <button onclick="closeClassModal()" class="flex-1 py-4 bg-gray-100 hover:bg-gray-200 rounded-2xl">關閉</button>
+      </div>
+    </div>
   </div>
 
-  <!-- 感謝頁面 -->
-  <div id="thankYouPage" class="hidden">
-    <h2 class="text-2xl font-bold text-center mb-4">您已成功提交報名表格! 📝</h2>
-    <p class="text-gray-600 mb-6">
-      稍後您將會收到WhatsApp確認訊息，以及付款詳情<br>
-      完成付款後，小朋友的報名將自動確認✅
-    </p>
-    <button class="return-button" onclick="restartForm()">重新報名</button>
+  <div id="resetConfirmModal" class="modal">
+    <div class="modal-content p-8 max-w-sm mx-auto">
+      <h2 class="text-xl font-semibold mb-4">確認清除課堂</h2>
+      <p>是否確定清除全部已選課堂？</p>
+      <div class="flex gap-4 mt-8">
+        <button onclick="confirmResetClasses()" class="flex-1 py-4 btn-primary rounded-2xl">是</button>
+        <button onclick="closeResetConfirmModal()" class="flex-1 py-4 bg-gray-100 rounded-2xl">否</button>
+      </div>
+    </div>
   </div>
+
+  <div id="clearFormConfirmModal" class="modal">
+    <div class="modal-content p-8 max-w-sm mx-auto">
+      <h2 class="text-xl font-semibold mb-4">確認清除表單</h2>
+      <p>是否確定清除所有資料並重新輸入？</p>
+      <div class="flex gap-4 mt-8">
+        <button onclick="confirmClearForm()" class="flex-1 py-4 btn-primary rounded-2xl">是</button>
+        <button onclick="closeClearFormConfirmModal()" class="flex-1 py-4 bg-gray-100 rounded-2xl">否</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="thankYouPage" class="hidden form-container p-12 text-center">
+    <h2 class="text-3xl font-bold mb-6">報名成功！🎉</h2>
+    <p class="text-gray-600">您將收到 WhatsApp 確認訊息與付款詳情</p>
+    <button onclick="restartForm()" class="mt-10 btn-primary px-12 py-4 text-lg">重新報名</button>
+  </div>
+
+  <footer>版本 1.61 • 2026暑期新生版 • 計價功能修正</footer>
 
   <script>
-    // 課程日期與時段數據
-    const schedules = {
-      '3歲至5歲': {
-        '星期一 9:30am - 10:30am': { displayTime: '9:30am', dates: ['2025-07-07', '2025-07-14', '2025-07-21', '2025-07-28', '2025-08-04', '2025-08-11', '2025-08-18', '2025-08-25'] },
-        '星期一 3:00pm - 4:00pm': { displayTime: '3:00pm', dates: ['2025-07-07', '2025-07-14', '2025-07-21', '2025-07-28', '2025-08-04', '2025-08-11', '2025-08-18', '2025-08-25'] },
-        '星期二 4:15pm - 5:15pm': { displayTime: '4:15pm', dates: ['2025-07-08', '2025-07-15', '2025-07-22', '2025-07-29', '2025-08-05', '2025-08-12', '2025-08-19', '2025-08-26'] },
-        '星期四 9:30am - 10:30am': { displayTime: '9:30am', dates: ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'] },
-        '星期四 3:00pm - 4:00pm': { displayTime: '3:00pm', dates: ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'] },
-        '星期六 11:30am - 12:30pm': { displayTime: '11:30am', dates: ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30'] },
-        '星期六 2:30pm - 3:30pm': { displayTime: '2:30pm', dates: ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30'] }
-      },
-      '6歲或以上': {
-        '星期一 5:30pm - 6:30pm': { displayTime: '5:30pm', dates: ['2025-07-07', '2025-07-14', '2025-07-21', '2025-07-28', '2025-08-04', '2025-08-11', '2025-08-18', '2025-08-25'] },
-        '星期二 3:00pm - 4:00pm': { displayTime: '3:00pm', dates: ['2025-07-08', '2025-07-15', '2025-07-22', '2025-07-29', '2025-08-05', '2025-08-12', '2025-08-19', '2025-08-26'] },
-        '星期四 5:30pm - 6:30pm': { displayTime: '5:30pm', dates: ['2025-07-03', '2025-07-10', '2025-07-17', '2025-07-24', '2025-07-31', '2025-08-07', '2025-08-14', '2025-08-21', '2025-08-28'] },
-        '星期六 10:00am - 11:00am': { displayTime: '10:00am', dates: ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30'] },
-        '星期六 3:45pm - 4:45pm': { displayTime: '3:45pm', dates: ['2025-07-05', '2025-07-12', '2025-07-19', '2025-07-26', '2025-08-02', '2025-08-09', '2025-08-16', '2025-08-23', '2025-08-30'] }
-      }
-    };
+    let schedules = {};
+    let previousSelectedDates = [];
+    let selectedClassType = '';
+    const weekdayOrder = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+    const year = '2026';
+    const months = ['07','08'];
 
-    // Populate birthdate dropdowns
-    const yearSelect = document.getElementById('birthYear');
-    const monthSelect = document.getElementById('birthMonth');
-    const daySelect = document.getElementById('birthDay');
-    const currentYear = new Date().getFullYear();
+    const sheetName = "2026培匠暑期新生時間表";
+    const apiUrl = `https://docs.google.com/spreadsheets/d/1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=1399949746`;
 
-    for (let year = currentYear; year >= 1900; year--) {
-      let option = document.createElement('option');
-      option.value = year;
-      option.text = year;
-      yearSelect.appendChild(option);
-    }
+    document.getElementById('introMonths').textContent = `以下為${year}年暑期新生班報名表格📝`;
 
-    for (let month = 1; month <= 12; month++) {
-      let option = document.createElement('option');
-      option.value = month;
-      option.text = month.toString().padStart(2, '0');
-      monthSelect.appendChild(option);
-    }
+    function calculatePrice(count) {
+      const basePrice = 220;
+      let total = count * basePrice;
+      let discount = 0;
+      let discountText = '';
 
-    function isLeapYear(year) {
-      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-    }
-
-    function updateDays() {
-      const year = parseInt(yearSelect.value);
-      const month = parseInt(monthSelect.value);
-      daySelect.innerHTML = '<option value="">日</option>';
-
-      if (year && month) {
-        let daysInMonth;
-        if (month === 2) {
-          daysInMonth = isLeapYear(year) ? 29 : 28;
-        } else {
-          daysInMonth = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
-        }
-        for (let day = 1; day <= daysInMonth; day++) {
-          let option = document.createElement('option');
-          option.value = day;
-          option.text = day.toString().padStart(2, '0');
-          daySelect.appendChild(option);
-        }
-      }
-    }
-
-    updateDays();
-    yearSelect.addEventListener('change', updateDays);
-    monthSelect.addEventListener('change', updateDays);
-
-    // Course selection
-    function selectCourse(card) {
-      document.querySelectorAll('.course-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      document.getElementById('courseOption').value = card.dataset.value;
-      updateCalendar();
-    }
-
-    // Image modal functions
-    function openImageModal() {
-      document.getElementById('imageModal').style.display = 'flex';
-    }
-
-    function closeImageModal() {
-      document.getElementById('imageModal').style.display = 'none';
-    }
-
-    // Prevent right-click on images
-    document.addEventListener('contextmenu', (e) => {
-      if (e.target.classList.contains('timetable-image') || e.target.classList.contains('image-modal-content')) {
-        e.preventDefault();
-      }
-    });
-
-    // Calendar initialization
-    let previousSelectedDates = []; // Store { date, timeSlot } objects
-
-    function generateCalendarDates() {
-      const julyStart = new Date('2025-07-01');
-      const julyEnd = new Date('2025-07-31');
-      const augustStart = new Date('2025-08-01');
-      const augustEnd = new Date('2025-08-31');
-      const julyDates = [];
-      const augustDates = [];
-      let currentDate = new Date(julyStart);
-
-      while (currentDate <= julyEnd) {
-        julyDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-      currentDate = new Date(augustStart);
-      while (currentDate <= augustEnd) {
-        augustDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-      return { july: julyDates, august: augustDates };
-    }
-
-    function updateClassCountPrompt(selectedCount, requiredCount) {
-      const prompt = document.getElementById('classCountPrompt');
-      prompt.textContent = `已選：${selectedCount} / 需選：${requiredCount}`;
-      prompt.classList.toggle('invalid', selectedCount !== requiredCount);
-    }
-
-    function formatDateString(dateStr) {
-      const [year, month, day] = dateStr.split('-');
-      return `${year}年${month}月${day}日`;
-    }
-
-    function updateCalendar() {
-      const classType = document.getElementById('classType').value;
-      const calendarContainer = document.getElementById('calendar');
-      const scheduleSection = document.getElementById('scheduleSection');
-      const courseOption = document.getElementById('courseOption').value;
-      const requiredClasses = courseOption ? parseInt(courseOption.match(/\d+/)[0]) : 0;
-
-      console.log('Updating calendar for classType:', classType);
-      console.log('Course option:', courseOption, 'Required classes:', requiredClasses);
-
-      // 清空日曆容器
-      calendarContainer.innerHTML = '';
-
-      // 如果有選擇班別，顯示課程時間與日期區塊
-      if (classType) {
-        console.log('Showing schedule section');
-        scheduleSection.classList.remove('hidden');
-      } else {
-        console.log('Hiding schedule section');
-        scheduleSection.classList.add('hidden');
-        updateClassCountPrompt(0, requiredClasses);
-        return;
+      if (count >= 8) {
+        discount = 200;
+        discountText = '8堂以上優惠 - $200';
+      } else if (count >= 6) {
+        discount = 100;
+        discountText = '6-7堂優惠 - $100';
       }
 
-      // 獲取可用日期
-      const availableDates = classType && schedules[classType]
-        ? [...new Set(Object.values(schedules[classType]).flatMap(slot => slot.dates))]
-        : [];
+      total = Math.max(0, total - discount);
+      return { total, discount, discountText, basePrice };
+    }
 
-      console.log('Available dates:', availableDates);
+    async function loadScheduleFromSheet() {
+      try {
+        const res = await fetch(apiUrl);
+        const text = await res.text();
+        const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/);
+        if (!match) throw new Error("無法解析課表");
+        const data = JSON.parse(match[1]);
 
-      if (availableDates.length === 0) {
-        console.warn('No available dates for selected class type');
-        calendarContainer.innerHTML = '<p class="text-gray-600">無可用課程日期</p>';
-        updateClassCountPrompt(0, requiredClasses);
-        return;
-      }
+        const newSchedules = {};
+        data.table.rows.forEach(row => {
+          const classType = row.c[0]?.v?.trim();
+          const fullTimeSlot = row.c[2]?.v?.toString().trim();
+          const hasAsterisk = row.c[3]?.v === '*';
+          const weekday = row.c[1]?.v?.trim();
+          const dates = row.c.slice(4)
+            .filter(c => c && c.v && /^\d{4}-\d{2}-\d{2}$/.test(c.v))
+            .map(c => c.v);
 
-      // 更新課堂數量提示
-      updateClassCountPrompt(previousSelectedDates.length, requiredClasses);
-
-      // 生成 7 月和 8 月日曆
-      const { july, august } = generateCalendarDates();
-
-      // 生成表格的共用函數
-      function createCalendarTable(dates, monthName, tableClass) {
-        const weeks = [];
-        let week = [];
-        dates.forEach((date, index) => {
-          if (date.getDay() === 1 || week.length === 0) {
-            if (week.length > 0) weeks.push(week);
-            week = [];
+          const cleanTime = fullTimeSlot.replace(/\*$/, '').trim();
+          if (classType && cleanTime && dates.length) {
+            if (!newSchedules[classType]) newSchedules[classType] = {};
+            if (!newSchedules[classType][cleanTime]) newSchedules[classType][cleanTime] = [];
+            newSchedules[classType][cleanTime].push({
+              dates,
+              hasAsterisk,
+              fullTimeSlot: fullTimeSlot,
+              displayTime: cleanTime.match(/^(\d{1,2}:\d{2}\s*(?:am|pm))/i)?.[0] || cleanTime,
+              weekday: weekday
+            });
           }
-          week.push(date);
-          if (index === dates.length - 1 && week.length > 0) weeks.push(week);
         });
+
+        schedules = newSchedules;
+        updateClassTypeButtons();
+      } catch (e) {
+        console.error(e);
+        document.getElementById('errorMessage').classList.remove('hidden');
+        document.getElementById('errorMessage').textContent = '課表載入失敗，請稍後重試';
+      }
+    }
+
+    function updateClassTypeButtons() {
+      const container = document.getElementById('classTypeButtons');
+      container.innerHTML = '';
+      Object.keys(schedules).forEach(type => {
+        const btn = document.createElement('button');
+        btn.className = `px-7 py-4 rounded-2xl border-2 font-medium transition-all ${selectedClassType === type ? 'bg-blue-500 text-white border-blue-500' : 'border-blue-100 bg-blue-50 hover:border-blue-300'}`;
+        btn.textContent = type;
+        btn.onclick = () => {
+          selectedClassType = type;
+          updateClassTypeButtons();
+          updateCalendar();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function updateClassCountPrompt() {
+      const count = previousSelectedDates.filter(d => !d.pendingCancel).length;
+      
+      // 更新右下角浮動計數器
+      const fc = document.getElementById('floating-counter');
+      fc.querySelector('.count').textContent = `${count} 堂`;
+      fc.classList.toggle('hidden', count === 0);
+
+      // 更新價格顯示區
+      const priceSection = document.getElementById('priceSection');
+      if (count > 0) {
+        priceSection.classList.remove('hidden');
+        const { total, discount, discountText, basePrice } = calculatePrice(count);
+        
+        document.getElementById('priceClassCount').textContent = `${count} 堂`;
+        document.getElementById('totalPriceDisplay').textContent = `$${total}`;
+        
+        if (discount > 0) {
+          document.getElementById('priceDetail').innerHTML = `
+            基價：${count} × $${basePrice} = $${count * basePrice}<br>
+            <span class="text-green-600 font-medium">${discountText}</span><br>
+            <strong>實付金額：$${total}</strong>
+          `;
+        } else {
+          document.getElementById('priceDetail').innerHTML = `$${basePrice} / 堂`;
+        }
+      } else {
+        priceSection.classList.add('hidden');
+      }
+    }
+
+    // 其餘函數保持不變（updateCalendar, createWeekRow, toggleTimeSlot 等）
+    function updateCalendar() {
+      const container = document.getElementById('calendar');
+      container.innerHTML = '';
+      if (!selectedClassType) {
+        document.getElementById('scheduleSection').classList.add('hidden');
+        return;
+      }
+      document.getElementById('scheduleSection').classList.remove('hidden');
+
+      months.forEach(month => {
+        const start = new Date(`${year}-${month}-01`);
+        const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+        const dates = [];
+        let d = new Date(start);
+        while (d <= end) {
+          dates.push(new Date(d));
+          d.setDate(d.getDate() + 1);
+        }
 
         const title = document.createElement('div');
-        title.className = 'calendar-title';
-        title.textContent = `2025年${monthName}`;
+        title.className = "text-xl font-semibold mb-4 mt-8 first:mt-0";
+        title.textContent = `${year}年${month}月`;
+        container.appendChild(title);
 
         const table = document.createElement('table');
-        table.className = `calendar-table ${tableClass}`;
+        table.className = "calendar-table";
+
         const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        ['一', '二', '三', '四', '五', '六', '日'].forEach(day => {
+        const trh = document.createElement('tr');
+        ['一','二','三','四','五','六','日'].forEach(day => {
           const th = document.createElement('th');
           th.textContent = day;
-          th.setAttribute('data-full-text', ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'][['一', '二', '三', '四', '五', '六', '日'].indexOf(day)]);
-          headerRow.appendChild(th);
+          trh.appendChild(th);
         });
-        thead.appendChild(headerRow);
+        thead.appendChild(trh);
         table.appendChild(thead);
 
         const tbody = document.createElement('tbody');
-        weeks.forEach(week => {
-          const tr = document.createElement('tr');
-          const weekDays = Array(7).fill(null);
-          week.forEach(date => {
-            weekDays[date.getDay() === 0 ? 6 : date.getDay() - 1] = date;
-          });
+        let week = [];
+        const offset = dates[0].getDay() === 0 ? 6 : dates[0].getDay() - 1;
+        for (let i = 0; i < offset; i++) week.push(null);
 
-          weekDays.forEach(day => {
-            const td = document.createElement('td');
-            if (day) {
-              const dateStr = `${day.getFullYear()}-${(day.getMonth() + 1).toString().padStart(2, '0')}-${day.getDate().toString().padStart(2, '0')}`;
-              if (availableDates.includes(dateStr)) {
-                const dateDiv = document.createElement('div');
-                dateDiv.className = 'date';
-                dateDiv.textContent = `${day.getMonth() + 1}/${day.getDate()}`;
-                td.appendChild(dateDiv);
-                const timeSlots = Object.entries(schedules[classType]).filter(([_, slot]) => slot.dates.includes(dateStr));
-                if (timeSlots.length > 0) {
-                  const slotDiv = document.createElement('div');
-                  slotDiv.className = 'time-slot';
-                  timeSlots.forEach(([timeSlot, slot]) => {
-                    const span = document.createElement('span');
-                    span.textContent = slot.displayTime;
-                    span.dataset.date = dateStr;
-                    span.dataset.timeSlot = timeSlot;
-                    span.classList.toggle('selected', previousSelectedDates.some(d => d.date === dateStr && d.timeSlot === timeSlot));
-                    span.addEventListener('click', () => {
-                      const isSelected = span.classList.contains('selected');
-                      if (isSelected) {
-                        previousSelectedDates = previousSelectedDates.filter(d => !(d.date === dateStr && d.timeSlot === timeSlot));
-                        span.classList.remove('selected');
-                      } else {
-                        previousSelectedDates.push({ date: dateStr, timeSlot });
-                        span.classList.add('selected');
-                      }
-                      previousSelectedDates.sort((a, b) => a.date.localeCompare(b.date));
-                      document.getElementById('selectedDates').value = previousSelectedDates
-                        .map(d => `${formatDateString(d.date)} ${d.timeSlot}`)
-                        .join(', ');
-                      updateClassCountPrompt(previousSelectedDates.length, requiredClasses);
-                    });
-                    slotDiv.appendChild(span);
-                  });
-                  td.appendChild(slotDiv);
-                }
-              } else {
-                const dateDiv = document.createElement('div');
-                dateDiv.className = 'date';
-                dateDiv.textContent = `${day.getMonth() + 1}/${day.getDate()}`;
-                td.appendChild(dateDiv);
-                td.className = 'disabled';
-              }
-            } else {
-              td.className = 'disabled';
-            }
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
+        dates.forEach(date => {
+          week.push(date);
+          if (week.length === 7) {
+            tbody.appendChild(createWeekRow(week));
+            week = [];
+          }
         });
+        if (week.length) {
+          while (week.length < 7) week.push(null);
+          tbody.appendChild(createWeekRow(week));
+        }
         table.appendChild(tbody);
-        calendarContainer.appendChild(title);
-        calendarContainer.appendChild(table);
-      }
+        container.appendChild(table);
+      });
 
-      createCalendarTable(july, '7月', 'july');
-      createCalendarTable(august, '8月', 'august');
+      updateClassCountPrompt();
     }
 
-    // Form validation and submission
-    const form = document.getElementById('registrationForm');
-    const nameInput = document.getElementById('name');
-    const phoneInput = document.getElementById('phone');
-    const courseOption = document.getElementById('courseOption');
-    const classType = document.getElementById('classType');
-    const nameError = document.getElementById('nameError');
-    const phoneError = document.getElementById('phoneError');
-    const birthdateError = document.getElementById('birthdateError');
-    const genderError = document.getElementById('genderError');
-    const courseError = document.getElementById('courseError');
-    const classTypeError = document.getElementById('classTypeError');
-    const datesError = document.getElementById('datesError');
-    const confirmModal = document.getElementById('confirmModal');
-    const formContainer = document.getElementById('formContainer');
-    const thankYouPage = document.getElementById('thankYouPage');
+    function createWeekRow(week) {
+      const tr = document.createElement('tr');
+      week.forEach(day => {
+        const td = document.createElement('td');
+        if (!day) {
+          td.classList.add('disabled');
+          tr.appendChild(td);
+          return;
+        }
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      let isValid = true;
+        const dateStr = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
 
-      nameError.style.display = 'none';
-      phoneError.style.display = 'none';
-      birthdateError.style.display = 'none';
-      genderError.style.display = 'none';
-      courseError.style.display = 'none';
-      classTypeError.style.display = 'none';
-      datesError.style.display = 'none';
+        const dateDiv = document.createElement('div');
+        dateDiv.className = "font-bold text-lg mb-3 text-center";
+        dateDiv.textContent = `${day.getMonth()+1}/${day.getDate()}`;
+        td.appendChild(dateDiv);
 
-      if (!nameInput.value.trim()) {
-        nameError.style.display = 'block';
-        isValid = false;
+        const slotDiv = document.createElement('div');
+        slotDiv.className = "time-slot";
+
+        if (schedules[selectedClassType]) {
+          Object.entries(schedules[selectedClassType]).forEach(([timeKey, slots]) => {
+            slots.forEach(slot => {
+              if (slot.dates.includes(dateStr)) {
+                const span = document.createElement('span');
+                span.textContent = slot.displayTime + (slot.hasAsterisk ? "*" : "");
+                span.dataset.date = dateStr;
+                span.dataset.timeKey = timeKey;
+                span.dataset.fullTime = slot.fullTimeSlot;
+                span.dataset.weekday = slot.weekday;
+
+                const isSelected = previousSelectedDates.some(d => d.date === dateStr && d.timeSlot === timeKey);
+                if (isSelected) span.classList.add('selected');
+
+                span.addEventListener('click', () => toggleTimeSlot(span, dateStr, timeKey, slot.fullTimeSlot, slot.weekday));
+                slotDiv.appendChild(span);
+              }
+            });
+          });
+        }
+        td.appendChild(slotDiv);
+        tr.appendChild(td);
+      });
+      return tr;
+    }
+
+    function toggleTimeSlot(span, dateStr, timeKey, fullTimeSlot, weekday) {
+      const index = previousSelectedDates.findIndex(d => d.date === dateStr && d.timeSlot === timeKey);
+      if (index > -1) {
+        previousSelectedDates.splice(index, 1);
+        span.classList.remove('selected');
+      } else {
+        previousSelectedDates.push({
+          classType: selectedClassType,
+          date: dateStr,
+          timeSlot: timeKey,
+          fullTimeSlot: fullTimeSlot,
+          weekday: weekday,
+          pendingCancel: false
+        });
+        span.classList.add('selected');
       }
+      document.getElementById('selectedDates').value = previousSelectedDates.map(d => 
+        formatDateWithDay(d.date, d.fullTimeSlot, d.classType)
+      ).join(', ');
+      updateClassCountPrompt();
+    }
 
-      if (!phoneInput.value.match(/\+?\d{8,}/)) {
-        phoneError.style.display = 'block';
-        isValid = false;
-      }
+    function formatDateWithDay(dateStr, fullTimeSlot, classType) {
+      const date = new Date(dateStr);
+      const dayNames = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}年${m}月${d}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
+    }
 
-      const year = parseInt(yearSelect.value);
-      const month = parseInt(monthSelect.value);
-      const day = parseInt(daySelect.value);
-      const selectedDate = new Date(year, month - 1, day);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    function formatSimpleDate(dateStr, fullTimeSlot) {
+      const date = new Date(dateStr);
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${m}月${d}日 ${fullTimeSlot}`;
+    }
 
-      if (!year || !month || !day || isNaN(selectedDate) || selectedDate > today) {
-        birthdateError.style.display = 'block';
-        isValid = false;
-      }
+    function generateGroupedDates(dates) {
+      if (!dates.length) return '<p class="text-gray-500">尚未選擇任何課程</p>';
 
-      if (!form.querySelector('input[name="entry.1745029240"]:checked')) {
-        genderError.style.display = 'block';
-        isValid = false;
-      }
+      const grouped = {};
+      dates.forEach(d => {
+        if (d.pendingCancel) return;
+        const ct = d.classType || '未分類';
+        const wd = d.weekday || '未知星期';
+        const month = d.date.slice(0,7);
+        if (!grouped[ct]) grouped[ct] = {};
+        if (!grouped[ct][wd]) grouped[ct][wd] = {};
+        if (!grouped[ct][wd][month]) grouped[ct][wd][month] = [];
+        grouped[ct][wd][month].push(d);
+      });
 
-      if (!courseOption.value) {
-        courseError.style.display = 'block';
-        isValid = false;
-      }
+      let html = '';
+      Object.keys(grouped).forEach(classType => {
+        const total = Object.values(grouped[classType]).flatMap(w => Object.values(w)).flat().length;
+        html += `<div class="mb-8"><h3 class="font-bold text-xl mb-3 text-blue-700">${classType} (${total}堂)</h3>`;
 
-      if (!classType.value) {
-        classTypeError.style.display = 'block';
-        isValid = false;
-      }
+        weekdayOrder.forEach(weekday => {
+          if (!grouped[classType][weekday]) return;
+          const months = grouped[classType][weekday];
+          const wdCount = Object.values(months).flat().length;
+          html += `<div class="mb-5"><h4 class="font-semibold text-lg mb-3">${weekday} (${wdCount}堂)</h4>`;
 
-      const selectedDates = previousSelectedDates;
-      const requiredClasses = courseOption.value ? parseInt(courseOption.value.match(/\d+/)[0]) : 0;
-      if (selectedDates.length !== requiredClasses) {
-        datesError.style.display = 'block';
-        datesError.textContent = `請選擇正確的 ${requiredClasses} 個課程日期，當前已選 ${selectedDates.length} 個。`;
-        isValid = false;
-      }
+          Object.keys(months).sort().forEach(month => {
+            const items = months[month].sort((a,b) => a.date.localeCompare(b.date));
+            const monthName = `${parseInt(month.split('-')[1])}月`;
+            html += `<div class="mb-4"><h5 class="font-medium mb-2">${monthName} (${items.length}堂)</h5><ul class="pl-6 space-y-1">`;
+            items.forEach(item => {
+              html += `<li class="py-1">• ${formatSimpleDate(item.date, item.fullTimeSlot)}</li>`;
+            });
+            html += `</ul></div>`;
+          });
+          html += `</div>`;
+        });
+        html += `</div>`;
+      });
+      return html;
+    }
 
-      if (isValid) {
-        document.getElementById('confirmName').textContent = nameInput.value;
-        document.getElementById('confirmPhone').textContent = phoneInput.value;
-        document.getElementById('confirmBirthdate').textContent = `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
-        document.getElementById('confirmGender').textContent = form.querySelector('input[name="entry.1745029240"]:checked').value;
-        document.getElementById('confirmCourse').textContent = courseOption.value;
-        document.getElementById('confirmClassType').textContent = classType.value;
-        const confirmDatesList = document.getElementById('confirmDates');
-        confirmDatesList.innerHTML = selectedDates
-          .map(date => `<li>${formatDateString(date.date)} ${date.timeSlot}</li>`)
-          .join('');
-        confirmModal.style.display = 'flex';
-      }
+    function showModal(id) { document.getElementById(id).classList.add('active'); }
+    function hideModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function showClassModal() {
+      showModal('classModal');
+      document.getElementById('classModalContent').innerHTML = generateGroupedDates(previousSelectedDates);
+    }
+    function closeClassModal() { hideModal('classModal'); }
+
+    function showResetConfirmModal() { showModal('resetConfirmModal'); }
+    function closeResetConfirmModal() { hideModal('resetConfirmModal'); }
+    function confirmResetClasses() {
+      previousSelectedDates = [];
+      updateClassCountPrompt();
+      updateCalendar();
+      closeResetConfirmModal();
+      closeClassModal();
+    }
+
+    function showClearFormConfirmModal() { showModal('clearFormConfirmModal'); }
+    function closeClearFormConfirmModal() { hideModal('clearFormConfirmModal'); }
+    function confirmClearForm() { location.reload(); }
+
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', e => {
+        if (e.target === modal) hideModal(modal.id);
+      });
     });
 
-    function cancelSubmission() {
-      confirmModal.style.display = 'none';
-    }
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      if (!name || !phone || previousSelectedDates.length === 0) {
+        alert('請填寫姓名、電話，並至少選擇一堂課');
+        return;
+      }
+
+      const count = previousSelectedDates.length;
+      const { total, discount, discountText } = calculatePrice(count);
+
+      document.getElementById('confirmContent').innerHTML = `
+        <p><strong>學員姓名：</strong> ${name}</p>
+        <p><strong>聯絡電話：</strong> ${phone}</p>
+        <p><strong>班別：</strong> ${selectedClassType}</p>
+        <p><strong>總堂數：</strong> 共 ${count} 堂</p>
+        
+        <div class="mt-6 p-6 bg-blue-50 rounded-3xl text-center">
+          <div class="text-4xl font-bold text-blue-700">$${total}</div>
+          ${discount > 0 ? `<div class="text-green-600 font-medium mt-2">${discountText}</div>` : ''}
+          <div class="text-sm text-gray-500 mt-1">$${220} / 堂</div>
+        </div>
+
+        <div class="mt-8 border-t pt-6">${generateGroupedDates(previousSelectedDates)}</div>
+      `;
+
+      showModal('confirmModal');
+    });
+
+    function cancelSubmission() { hideModal('confirmModal'); }
 
     async function confirmSubmission() {
-      confirmModal.style.display = 'none';
+      hideModal('confirmModal');
+      const form = document.getElementById('registrationForm');
+      const fd = new FormData(form);
       
-      const formData = new FormData(form);
+      const count = previousSelectedDates.length;
+      const { total } = calculatePrice(count);
+      
+      const classTypeWithSummer = selectedClassType + " 暑期班新生";
+      
+      fd.set('entry.1451557446', `共 ${count} 堂`);
+      fd.set('entry.781986668', classTypeWithSummer);
+      
       try {
-        const response = await fetch(form.action, {
-          method: 'POST',
-          body: formData,
-          mode: 'no-cors'
-        });
-        console.log('表單提交成功');
-        formContainer.style.display = 'none';
-        thankYouPage.style.display = 'block';
-      } catch (error) {
-        console.error('提交失敗:', error);
-        alert('表單提交失敗，請稍後再試。');
-      }
+        await fetch(form.action, { method: 'POST', body: fd, mode: 'no-cors' });
+      } catch(e) {}
       
-      resetForm();
+      document.getElementById('formContainer').classList.add('hidden');
+      document.getElementById('thankYouPage').classList.remove('hidden');
     }
 
-    function resetForm() {
-      form.reset();
-      document.querySelectorAll('.course-card').forEach(c => c.classList.remove('selected'));
-      document.getElementById('courseOption').value = '';
-      document.getElementById('scheduleSection').classList.add('hidden');
-      document.getElementById('selectedDates').value = '';
-      previousSelectedDates = [];
-      document.getElementById('calendar').innerHTML = '';
-      document.getElementById('classCountPrompt').textContent = '';
-      nameError.style.display = 'none';
-      phoneError.style.display = 'none';
-      birthdateError.style.display = 'none';
-      genderError.style.display = 'none';
-      courseError.style.display = 'none';
-      classTypeError.style.display = 'none';
-      datesError.style.display = 'none';
-      updateDays();
-      updateCalendar();
-    }
+    function restartForm() { location.reload(); }
 
-    function restartForm() {
-      thankYouPage.style.display = 'none';
-      formContainer.style.display = 'block';
-      resetForm();
-    }
-
-    // 初始化日曆
-    updateCalendar();
+    loadScheduleFromSheet();
   </script>
 </body>
 </html>
