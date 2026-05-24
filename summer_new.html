@@ -152,16 +152,6 @@
       margin-top: 30px;
       padding: 0 20px;
     }
-
-    .note {
-      background: #f0f9ff;
-      border-left: 5px solid rgb(var(--primary));
-      padding: 16px 20px;
-      margin-top: 20px;
-      border-radius: 8px;
-      font-size: 15px;
-      line-height: 1.6;
-    }
   </style>
 </head>
 <body>
@@ -171,7 +161,6 @@
       <p class="text-xl opacity-95">2026暑期新生報名表</p>
     </div>
 
-    <!-- 新增圖片 -->
     <div class="px-8 pt-4 pb-6 text-center">
       <img src="2026_summer_timetable_new.png" alt="2026暑期新生時間表" class="mx-auto rounded-2xl shadow-md max-w-full h-auto">
     </div>
@@ -183,14 +172,14 @@
         <p>家長你好！👋</p>
         <p id="introMonths" class="font-medium text-lg"></p>
         <p>請按照小朋友時間表填寫以下資訊</p>
-       <p class="text-blue-600 font-medium">完成後會收到 WhatsApp 通知確認付款💬</p>
-       <br>
-          <strong class="text-gray-800">備註：</strong><br>
-          學員需穿上本會道袍上堂🥋<br>
-          費用 $350<br>
-          家長可先付款<br>
-          於首堂或之前到道場選尺寸<br>
-          詳情請向教練查詢🔍
+        <p class="text-blue-600 font-medium">完成後會收到 WhatsApp 通知確認付款💬</p>
+        <br>
+        <strong class="text-gray-800">備註：</strong><br>
+        學員需穿上本會道袍上堂🥋<br>
+        費用 $350<br>
+        家長可先付款<br>
+        於首堂或之前到道場選尺寸<br>
+        詳情請向教練查詢🔍
       </div>
 
       <form id="registrationForm" action="https://docs.google.com/forms/d/e/1FAIpQLSe0kOPO9hkI1TmXDOGEMSonsd79Lu5Cenam3qqexGpKctcaDw/formResponse" method="POST" class="space-y-12">
@@ -222,7 +211,6 @@
           <h2 class="text-2xl font-semibold mb-6">選擇上課日期與時段</h2>
           <p class="text-sm text-gray-500 mb-6">有 * 為色帶可參加班別</p>
           <div id="calendar" class="calendar-container"></div>
-          <p id="classCountPrompt" class="text-center text-lg font-medium mt-8"></p>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-4 pt-6">
@@ -292,7 +280,7 @@
     <button onclick="restartForm()" class="mt-10 btn-primary px-12 py-4 text-lg">重新報名</button>
   </div>
 
-  <footer>版本 1.5 • 2026暑期新生版 • 2026</footer>
+  <footer>版本 1.62 • 2026暑期新生版 • 確認頁計價</footer>
 
   <script>
     let schedules = {};
@@ -306,6 +294,24 @@
     const apiUrl = `https://docs.google.com/spreadsheets/d/1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=1399949746`;
 
     document.getElementById('introMonths').textContent = `以下為${year}年暑期新生班報名表格📝`;
+
+    function calculatePrice(count) {
+      const basePrice = 220;
+      let total = count * basePrice;
+      let discount = 0;
+      let discountText = '';
+
+      if (count >= 8) {
+        discount = 200;
+        discountText = '8堂以上優惠 -$200';
+      } else if (count >= 6) {
+        discount = 100;
+        discountText = '6-7堂優惠 -$100';
+      }
+
+      total = Math.max(0, total - discount);
+      return { total, discount, discountText, basePrice };
+    }
 
     async function loadScheduleFromSheet() {
       try {
@@ -366,68 +372,10 @@
 
     function updateClassCountPrompt() {
       const count = previousSelectedDates.filter(d => !d.pendingCancel).length;
-      document.getElementById('classCountPrompt').innerHTML = `已選 <span class="text-blue-600 font-bold">${count}</span> 堂`;
+      
       const fc = document.getElementById('floating-counter');
       fc.querySelector('.count').textContent = `${count} 堂`;
       fc.classList.toggle('hidden', count === 0);
-    }
-
-    function formatDateWithDay(dateStr, fullTimeSlot, classType) {
-      const date = new Date(dateStr);
-      const dayNames = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      return `${y}年${m}月${d}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
-    }
-
-    function formatSimpleDate(dateStr, fullTimeSlot) {
-      const date = new Date(dateStr);
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      return `${m}月${d}日 ${fullTimeSlot}`;
-    }
-
-    function generateGroupedDates(dates) {
-      if (!dates.length) return '<p class="text-gray-500">尚未選擇任何課程</p>';
-
-      const grouped = {};
-      dates.forEach(d => {
-        if (d.pendingCancel) return;
-        const ct = d.classType || '未分類';
-        const wd = d.weekday || '未知星期';
-        const month = d.date.slice(0,7);
-        if (!grouped[ct]) grouped[ct] = {};
-        if (!grouped[ct][wd]) grouped[ct][wd] = {};
-        if (!grouped[ct][wd][month]) grouped[ct][wd][month] = [];
-        grouped[ct][wd][month].push(d);
-      });
-
-      let html = '';
-      Object.keys(grouped).forEach(classType => {
-        const total = Object.values(grouped[classType]).flatMap(w => Object.values(w)).flat().length;
-        html += `<div class="mb-8"><h3 class="font-bold text-xl mb-3 text-blue-700">${classType} (${total}堂)</h3>`;
-
-        weekdayOrder.forEach(weekday => {
-          if (!grouped[classType][weekday]) return;
-          const months = grouped[classType][weekday];
-          const wdCount = Object.values(months).flat().length;
-          html += `<div class="mb-5"><h4 class="font-semibold text-lg mb-3">${weekday} (${wdCount}堂)</h4>`;
-
-          Object.keys(months).sort().forEach(month => {
-            const items = months[month].sort((a,b) => a.date.localeCompare(b.date));
-            const monthName = `${parseInt(month.split('-')[1])}月`;
-            html += `<div class="mb-4"><h5 class="font-medium mb-2">${monthName} (${items.length}堂)</h5><ul class="pl-6 space-y-1">`;
-            items.forEach(item => {
-              html += `<li class="py-1">• ${formatSimpleDate(item.date, item.fullTimeSlot)}</li>`;
-            });
-            html += `</ul></div>`;
-          });
-          html += `</div>`;
-        });
-        html += `</div>`;
-      });
-      return html;
     }
 
     function updateCalendar() {
@@ -558,6 +506,64 @@
       updateClassCountPrompt();
     }
 
+    function formatDateWithDay(dateStr, fullTimeSlot, classType) {
+      const date = new Date(dateStr);
+      const dayNames = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}年${m}月${d}日 ${dayNames[date.getDay()]} ${fullTimeSlot} (${classType})`;
+    }
+
+    function formatSimpleDate(dateStr, fullTimeSlot) {
+      const date = new Date(dateStr);
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${m}月${d}日 ${fullTimeSlot}`;
+    }
+
+    function generateGroupedDates(dates) {
+      if (!dates.length) return '<p class="text-gray-500">尚未選擇任何課程</p>';
+
+      const grouped = {};
+      dates.forEach(d => {
+        if (d.pendingCancel) return;
+        const ct = d.classType || '未分類';
+        const wd = d.weekday || '未知星期';
+        const month = d.date.slice(0,7);
+        if (!grouped[ct]) grouped[ct] = {};
+        if (!grouped[ct][wd]) grouped[ct][wd] = {};
+        if (!grouped[ct][wd][month]) grouped[ct][wd][month] = [];
+        grouped[ct][wd][month].push(d);
+      });
+
+      let html = '';
+      Object.keys(grouped).forEach(classType => {
+        const total = Object.values(grouped[classType]).flatMap(w => Object.values(w)).flat().length;
+        html += `<div class="mb-8"><h3 class="font-bold text-xl mb-3 text-blue-700">${classType} (${total}堂)</h3>`;
+
+        weekdayOrder.forEach(weekday => {
+          if (!grouped[classType][weekday]) return;
+          const months = grouped[classType][weekday];
+          const wdCount = Object.values(months).flat().length;
+          html += `<div class="mb-5"><h4 class="font-semibold text-lg mb-3">${weekday} (${wdCount}堂)</h4>`;
+
+          Object.keys(months).sort().forEach(month => {
+            const items = months[month].sort((a,b) => a.date.localeCompare(b.date));
+            const monthName = `${parseInt(month.split('-')[1])}月`;
+            html += `<div class="mb-4"><h5 class="font-medium mb-2">${monthName} (${items.length}堂)</h5><ul class="pl-6 space-y-1">`;
+            items.forEach(item => {
+              html += `<li class="py-1">• ${formatSimpleDate(item.date, item.fullTimeSlot)}</li>`;
+            });
+            html += `</ul></div>`;
+          });
+          html += `</div>`;
+        });
+        html += `</div>`;
+      });
+      return html;
+    }
+
     function showModal(id) { document.getElementById(id).classList.add('active'); }
     function hideModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -596,13 +602,40 @@
         return;
       }
 
+      const count = previousSelectedDates.length;
+      const { total, discount, discountText, basePrice } = calculatePrice(count);
+
       document.getElementById('confirmContent').innerHTML = `
         <p><strong>學員姓名：</strong> ${name}</p>
         <p><strong>聯絡電話：</strong> ${phone}</p>
         <p><strong>班別：</strong> ${selectedClassType}</p>
-        <p><strong>總堂數：</strong> 共 ${previousSelectedDates.length} 堂</p>
-        <div class="mt-6 border-t pt-4">${generateGroupedDates(previousSelectedDates)}</div>
+        <p><strong>總堂數：</strong> 共 ${count} 堂</p>
+        
+        <div class="mt-8 p-6 bg-blue-50 rounded-3xl">
+          <div class="text-center mb-6">
+            <div class="text-5xl font-bold text-blue-700">$${total}</div>
+          </div>
+          
+          <div class="space-y-3 text-gray-700">
+            <div class="flex justify-between">
+              <span>原價：</span>
+              <span>${count} × $${basePrice} = $${count * basePrice}</span>
+            </div>
+            ${discount > 0 ? `
+            <div class="flex justify-between text-green-600 font-medium">
+              <span>${discountText}</span>
+              <span>-$${discount}</span>
+            </div>` : ''}
+            <div class="flex justify-between border-t pt-3 font-semibold">
+              <span>總金額：</span>
+              <span>$${total}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 border-t pt-6">${generateGroupedDates(previousSelectedDates)}</div>
       `;
+
       showModal('confirmModal');
     });
 
@@ -613,14 +646,18 @@
       const form = document.getElementById('registrationForm');
       const fd = new FormData(form);
       
+      const count = previousSelectedDates.length;
+      const { total } = calculatePrice(count);
+      
       const classTypeWithSummer = selectedClassType + " 暑期班新生";
       
-      fd.set('entry.1451557446', `共 ${previousSelectedDates.length} 堂`);
+      fd.set('entry.1451557446', `共 ${count} 堂`);
       fd.set('entry.781986668', classTypeWithSummer);
       
       try {
         await fetch(form.action, { method: 'POST', body: fd, mode: 'no-cors' });
       } catch(e) {}
+      
       document.getElementById('formContainer').classList.add('hidden');
       document.getElementById('thankYouPage').classList.remove('hidden');
     }
