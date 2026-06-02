@@ -270,11 +270,11 @@
     const weekdayOrder = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
     const year = '2026';
     const months = ['07','08'];
-    const sheetName = `${year}${months[0]}恆常班時間表`;
+    const sheetName = `2026培匠舊生暑期時間表`;
     const spreadsheetId = '1IGczhrahIZF2W6_RUUU9ib5vQ1vkLVDIQEObWxEStgU';
-    const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=675929662`;
+    const apiUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA&sheet=${encodeURIComponent(sheetName)}&gid=1262417999`;
 
-    document.getElementById('introMonths').textContent = `以下為${year}年${months.join('-')}月恆常班報名表格📝`;
+    document.getElementById('introMonths').textContent = `以下為2026培匠舊生暑期報名表格📝`;
 
     async function loadScheduleFromSheet() {
       try {
